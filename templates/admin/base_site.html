@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block extrastyle %}
+<style>
+    /* Скрываем ссылку "Skip to main content" */
+    #skip-to-content-link {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block title %}{{ title }} | Xodimlar Malakasini oshirish va Qayta tayyorlash Markazi{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        Xodimlar Malakasini oshirish va Qayta tayyorlash Markazi
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

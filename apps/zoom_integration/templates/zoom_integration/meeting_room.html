@@ -1,0 +1,73 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ meeting.topic }} - Zoom uchrashuv{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" href="{% static 'zoom_integration/css/ZoomMeeting.css' %}">
+<style>
+    .zoom-header {
+        background: linear-gradient(135deg, #417690 0%, #5b9ab5 100%);
+        color: white;
+        padding: 20px 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .zoom-header h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+    
+    .zoom-header .meeting-meta {
+        margin-top: 10px;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+    
+    .zoom-container {
+        padding: 0;
+        max-width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="zoom-header">
+    <h1>📹 {{ meeting.topic }}</h1>
+    <div class="meeting-meta">
+        <span>👨‍🏫 {{ meeting.teacher.full_name|default:meeting.teacher.username }}</span> | 
+        <span>📅 {{ meeting.start_time|date:"d.m.Y H:i" }}</span> | 
+        <span>⏱️ {{ meeting.duration }} daqiqa</span>
+        {% if meeting.is_live %}
+        <span class="live-badge">🔴 JONLI</span>
+        {% endif %}
+    </div>
+</div>
+
+<div id="zoom-meeting-app"></div>
+
+<script src="https://jssdk.zoomus/cloudelectron/1.14.0/lib/vendor/react.min.js"></script>
+<script src="https://jssdk.zoomus/cloudelectron/1.14.0/lib/vendor/react-dom.min.js"></script>
+<script src="https://jssdk.zoomus/cloudelectron/1.14.0/lib/vendor/redux.min.js"></script>
+<script src="https://jssdk.zoomus/cloudelectron/1.14.0/lib/vendor/redux-thunk.min.js"></script>
+<script src="https://jssdk.zoomus/cloudelectron/1.14.0/lib/libZoomSDK.js"></script>
+<script src="{% static 'zoom_integration/js/ZoomMeetingApp.js' %}"></script>
+
+<script>
+    // Инициализация приложения
+    window.addEventListener('DOMContentLoaded', () => {
+        const meetingData = {
+            meetingId: '{{ meeting.zoom_meeting_id }}',
+            password: '{{ meeting.zoom_password }}',
+            signature: '{{ signature }}',
+            userName: '{{ user_name }}',
+            userEmail: '{{ user_email }}',
+            apiKey: '{{ api_key }}',
+            meetingRoomUrl: '{% url "zoom:meeting_room" meeting.id %}',
+            meetingListUrl: '{% url "zoom:meeting_list" %}',
+        };
+        
+        ZoomMeetingApp.init('zoom-meeting-app', meetingData);
+    });
+</script>
+{% endblock %}

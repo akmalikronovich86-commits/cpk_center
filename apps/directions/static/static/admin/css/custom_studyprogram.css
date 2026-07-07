@@ -1,0 +1,164 @@
+/* Улучшенные стили для таблицы StudyProgram */
+
+/* Заголовки колонок */
+#result_list thead th {
+    background: #417690 !important;
+    color: white !important;
+    padding: 10px 12px !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+    border-bottom: 2px solid #325b70 !important;
+}
+
+/* Строки таблицы */
+#result_list tbody tr {
+    border-bottom: 1px solid #e0e0e0 !important;
+    transition: background 0.2s !important;
+}
+
+#result_list tbody tr:hover {
+    background: #f5f7fa !important;
+}
+
+#result_list tbody tr:nth-child(even) {
+    background: #fafafa !important;
+}
+
+#result_list tbody tr:nth-child(even):hover {
+    background: #f0f4f8 !important;
+}
+
+/* Ячейки */
+#result_list tbody td {
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+    vertical-align: middle !important;
+}
+
+/* Ссылки на программы */
+#result_list tbody td a {
+    color: #417690 !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+}
+
+#result_list tbody td a:hover {
+    text-decoration: underline !important;
+    color: #325b70 !important;
+}
+
+/* Чекбоксы */
+#result_list tbody td input[type="checkbox"] {
+    margin: 0 !important;
+}
+
+/* Кнопка добавления */
+.object-tools a.addlink {
+    background: #417690 !important;
+    border-radius: 4px !important;
+    padding: 8px 16px !important;
+    font-weight: bold !important;
+}
+
+.object-tools a.addlink:hover {
+    background: #325b70 !important;
+}
+
+/* Поиск */
+#searchbar {
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    padding: 6px 10px !important;
+}
+
+#searchbar:focus {
+    border-color: #417690 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(65, 118, 144, 0.2) !important;
+}
+
+/* Кнопка поиска */
+.submit-row input[type="submit"] {
+    background: #417690 !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 6px 16px !important;
+    color: white !important;
+    cursor: pointer !important;
+}
+
+.submit-row input[type="submit"]:hover {
+    background: #325b70 !important;
+}
+
+/* Фильтры справа */
+#changelist-filter {
+    background: #f8f9fa !important;
+    border-left: 1px solid #e0e0e0 !important;
+}
+
+#changelist-filter h2 {
+    background: #417690 !important;
+    color: white !important;
+    padding: 10px !important;
+    border-radius: 4px 4px 0 0 !important;
+    font-size: 13px !important;
+}
+
+#changelist-filter h3 {
+    color: #417690 !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+}
+
+#changelist-filter a {
+    color: #666 !important;
+    text-decoration: none !important;
+    padding: 4px 0 !important;
+    display: block !important;
+    font-size: 12px !important;
+}
+
+#changelist-filter a:hover {
+    color: #417690 !important;
+}
+
+#changelist-filter a.selected {
+    color: #417690 !important;
+    font-weight: bold !important;
+}
+
+/* Пагинация */
+.paginator {
+    background: #f8f9fa !important;
+    border-top: 1px solid #e0e0e0 !important;
+    padding: 10px !important;
+}
+
+.paginator a {
+    color: #417690 !important;
+    text-decoration: none !important;
+    padding: 4px 8px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 3px !important;
+    margin: 0 2px !important;
+}
+
+.paginator a:hover {
+    background: #417690 !important;
+    color: white !important;
+}
+
+.paginator .this-page {
+    background: #417690 !important;
+    color: white !important;
+    padding: 4px 8px !important;
+    border-radius: 3px !important;
+}
+
+/* Информация о количестве записей */
+#changelist .results p {
+    color: #666 !important;
+    font-size: 13px !important;
+    padding: 10px 0 !important;
+}
