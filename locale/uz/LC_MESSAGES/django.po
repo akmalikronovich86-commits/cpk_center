@@ -1,0 +1,398 @@
+# Uzbek translations for Django admin
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: uz\n"
+
+msgid "Is active"
+msgstr "Faol"
+
+msgid "IS ACTIVE"
+msgstr "FAOL"
+
+msgid "Active"
+msgstr "Faol"
+
+msgid "Inactive"
+msgstr "Nofaol"
+
+msgid "Created at"
+msgstr "Yaratilgan sana"
+
+msgid "Created at:"
+msgstr "Yaratilgan sana:"
+
+msgid "Updated at"
+msgstr "Yangilangan sana"
+
+msgid "Save"
+msgstr "Saqlash"
+
+msgid "Save and continue editing"
+msgstr "Saqlash va tahrirlashni davom ettirish"
+
+msgid "Save and add another"
+msgstr "Saqlash va yana qo'shish"
+
+msgid "Cancel"
+msgstr "Bekor qilish"
+
+msgid "Delete"
+msgstr "O'chirish"
+
+msgid "Home"
+msgstr "Bosh sahifa"
+
+msgid "Add"
+msgstr "Qo'shish"
+
+msgid "Change"
+msgstr "O'zgartirish"
+
+msgid "Search"
+msgstr "Qidirish"
+
+msgid "Filter"
+msgstr "Filtr"
+
+msgid "Actions"
+msgstr "Harakatlar"
+
+msgid "Select all"
+msgstr "Barchasini tanlash"
+
+msgid "Deselect all"
+msgstr "Barchasini bekor qilish"
+
+msgid "Export"
+msgstr "Eksport"
+
+msgid "Import"
+msgstr "Import"
+
+msgid "Submit"
+msgstr "Tasdiqlash"
+
+msgid "Yes"
+msgstr "Ha"
+
+msgid "No"
+msgstr "Yo'q"
+
+msgid "All"
+msgstr "Barchasi"
+
+msgid "ID"
+msgstr "ID"
+
+msgid "Name"
+msgstr "Nomi"
+
+msgid "Type"
+msgstr "Turi"
+
+msgid "Description"
+msgstr "Tavsif"
+
+msgid "Hours"
+msgstr "Soatlar"
+
+msgid "Theoretical"
+msgstr "Nazariy"
+
+msgid "Practical"
+msgstr "Amaliy"
+
+msgid "Total"
+msgstr "Jami"
+
+msgid "of"
+msgstr "dan"
+
+msgid "selected"
+msgstr "tanlandi"
+
+msgid "Select an action"
+msgstr "Harakatni tanlang"
+
+msgid "Go"
+msgstr "Bajarish"
+
+msgid "This field is required."
+msgstr "Bu maydon majburiy."
+
+msgid "Are you sure?"
+msgstr "Ishonchingiz komilmi?"
+
+msgid "Confirm"
+msgstr "Tasdiqlash"
+
+msgid "Close"
+msgstr "Yopish"
+
+msgid "Loading..."
+msgstr "Yuklanmoqda..."
+
+msgid "No results found."
+msgstr "Natijalar topilmadi."
+
+msgid "Show all"
+msgstr "Barchasini ko'rsatish"
+
+msgid "Hide"
+msgstr "Yashirish"
+
+msgid "Show"
+msgstr "Ko'rsatish"
+
+msgid "Ascending"
+msgstr "O'sish bo'yicha"
+
+msgid "Descending"
+msgstr "Kamayish bo'yicha"
+
+msgid "by"
+msgstr "bo'yicha"
+
+msgid "Clear all filters"
+msgstr "Barcha filtrlarni tozalash"
+
+msgid "Module"
+msgstr "Modul"
+
+msgid "Modules"
+msgstr "Modullar"
+
+msgid "Study Program"
+msgstr "O'quv dasturi"
+
+msgid "Study Programs"
+msgstr "O'quv dasturlari"
+
+msgid "Direction"
+msgstr "Yo'nalish"
+
+msgid "Directions"
+msgstr "Yo'nalishlar"
+
+msgid "Training Year"
+msgstr "O'quv yili"
+
+msgid "Training Years"
+msgstr "O'quv yillari"
+
+msgid "Course"
+msgstr "Kurs"
+
+msgid "Courses"
+msgstr "Kurslar"
+
+msgid "Student"
+msgstr "Talaba"
+
+msgid "Students"
+msgstr "Talabalar"
+
+msgid "Group"
+msgstr "Guruh"
+
+msgid "Groups"
+msgstr "Guruhlar"
+
+msgid "Topic"
+msgstr "Mavzu"
+
+msgid "Topics"
+msgstr "Mavzular"
+
+msgid "Exam"
+msgstr "Imtihon"
+
+msgid "Exams"
+msgstr "Imtihonlar"
+
+msgid "Material"
+msgstr "Material"
+
+msgid "Materials"
+msgstr "Materiallar"
+
+msgid "Schedule"
+msgstr "Jadval"
+
+msgid "Schedules"
+msgstr "Jadvallar"
+
+msgid "Lecturer"
+msgstr "Ma'ruzachi"
+
+msgid "Lecturers"
+msgstr "Ma'ruzachilar"
+
+msgid "User"
+msgstr "Foydalanuvchi"
+
+msgid "Users"
+msgstr "Foydalanuvchilar"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Profiles"
+msgstr "Profillar"
+
+msgid "File"
+msgstr "Fayl"
+
+msgid "Upload"
+msgstr "Yuklash"
+
+msgid "Download"
+msgstr "Yuklab olish"
+
+msgid "Choose File"
+msgstr "Faylni tanlang"
+
+msgid "No file chosen"
+msgstr "Fayl tanlanmagan"
+
+msgid "Select %s to change"
+msgstr "O'zgartirish uchun %s tanlang"
+
+msgid "Select Modul to change"
+msgstr "O'zgartirish uchun Modulni tanlang"
+
+msgid "Select O'quv yili to change"
+msgstr "O'zgartirish uchun O'quv yilini tanlang"
+
+msgid "Select Yo'nalish to change"
+msgstr "O'zgartirish uchun Yo'nalishni tanlang"
+
+msgid "Please correct the errors below."
+msgstr "Quyidagi xatolarni tuzating."
+
+msgid "Successfully saved."
+msgstr "Muvaffaqiyatli saqlandi."
+
+msgid "Module nomi"
+msgstr "Modul nomi"
+
+msgid "Yo'nalish nomi"
+msgstr "Yo'nalish nomi"
+
+msgid "Kodi"
+msgstr "Kodi"
+
+msgid "KODI"
+msgstr "KODI"
+
+msgid "O'quv yili"
+msgstr "O'quv yili"
+
+msgid "O'QUV YILI"
+msgstr "O'QUV YILI"
+
+msgid "Academic year"
+msgstr "O'quv yili"
+
+msgid "Dastur nomi"
+msgstr "Dastur nomi"
+
+msgid "Fayl (PDF/DOCX)"
+msgstr "Fayl (PDF/DOCX)"
+
+msgid "File (PDF/DOCX)"
+msgstr "Fayl (PDF/DOCX)"
+
+msgid "O'quv dasturi"
+msgstr "O'quv dasturi"
+
+msgid "O'quv dasturlari"
+msgstr "O'quv dasturlari"
+
+msgid "Modullar"
+msgstr "Modullar"
+
+msgid "Yo'nalishlar"
+msgstr "Yo'nalishlar"
+
+msgid "Bosh sahifa"
+msgstr "Bosh sahifa"
+
+msgid "Qo'shish"
+msgstr "Qo'shish"
+
+msgid "O'zgartirish"
+msgstr "O'zgartirish"
+
+msgid "O'chirish"
+msgstr "O'chirish"
+
+msgid "Saqlash"
+msgstr "Saqlash"
+
+msgid "Bekor qilish"
+msgstr "Bekor qilish"
+
+msgid "Tasdiqlash"
+msgstr "Tasdiqlash"
+
+msgid "Qidirish"
+msgstr "Qidirish"
+
+msgid "Filtr"
+msgstr "Filtr"
+
+msgid "Harakatlar"
+msgstr "Harakatlar"
+
+msgid "Barchasini tanlash"
+msgstr "Barchasini tanlash"
+
+msgid "Barchasini bekor qilish"
+msgstr "Barchasini bekor qilish"
+
+msgid "Eksport"
+msgstr "Eksport"
+
+msgid "Bajarish"
+msgstr "Bajarish"
+
+msgid "tanlandi"
+msgstr "tanlandi"
+
+msgid "dan"
+msgstr "dan"
+
+msgid "Jami"
+msgstr "Jami"
+
+msgid "Soatlar"
+msgstr "Soatlar"
+
+msgid "Nazariy"
+msgstr "Nazariy"
+
+msgid "Amaliy"
+msgstr "Amaliy"
+
+msgid "Dars turi"
+msgstr "Dars turi"
+
+msgid "Tavsif"
+msgstr "Tavsif"
+
+msgid "Ma'ruzachilar"
+msgstr "Ma'ruzachilar"
+
+msgid "Yaratilgan sana"
+msgstr "Yaratilgan sana"
+
+msgid "Yangilangan sana"
+msgstr "Yangilangan sana"
+
+msgid "Faol"
+msgstr "Faol"
+
+msgid "Nofaol"
+msgstr "Nofaol"

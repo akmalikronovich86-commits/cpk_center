@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Sertifikat tekshirish</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .header { background: #1e3a5f; color: white; padding: 20px; text-align: center; margin: -30px -30px 20px -30px; border-radius: 15px 15px 0 0; }
+        .valid { background: #c6f6d5; color: #22543d; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; border-radius: 5px; }
+        .invalid { background: #fed7d7; color: #742a2a; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; border-radius: 5px; }
+        .info { margin: 10px 0; padding: 10px; background: #f7fafc; border-radius: 5px; }
+        .label { font-weight: bold; color: #4a5568; }
+        .badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-left: 10px; background: #48bb78; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>XODIMLAR MALAKASINI OSHIRISH VA QAYTA TAYYORLASH MARKAZI</h1>
+            <p>Sertifikat tekshirish tizimi</p>
+        </div>
+        
+        {% if is_valid %}
+        <div class="valid">✓ Haqiqiy sertifikat - TASDIQLANDI <span class="badge">TASDIQLANDI</span></div>
+        {% else %}
+        <div class="invalid">✗ Sertifikat haqiqiy emas - BEKOR QILINGAN</div>
+        {% endif %}
+        
+        <h3 style="margin-top: 20px; color: #1e3a5f;">Asosiy ma'lumotlar</h3>
+        <div class="info"><span class="label">Sertifikat raqami:</span> {{ certificate.certificate_number }}</div>
+        <div class="info"><span class="label">Tinglovchi:</span> {{ certificate.student.full_name }}</div>
+        <div class="info"><span class="label">Kurs:</span> {{ certificate.course.title }}</div>
+        <div class="info"><span class="label">Berilgan sana:</span> {{ certificate.issue_date|date:"d.m.Y" }}</div>
+        {% if certificate.expiry_date %}
+        <div class="info"><span class="label">Amal qilish muddati:</span> {{ certificate.expiry_date|date:"d.m.Y" }}</div>
+        {% endif %}
+        <div class="info"><span class="label">Holat:</span> {{ certificate.get_status_display }}</div>
+        
+        <p style="margin-top: 20px; text-align: center; color: #718096; font-size: 13px;">
+            © {{ certificate.created_at|date:"Y" }} Xodimlar Malakasini Oshirish Markazi
+        </p>
+    </div>
+</body>
+</html>

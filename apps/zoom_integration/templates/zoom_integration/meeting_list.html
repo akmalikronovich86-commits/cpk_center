@@ -1,0 +1,208 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Zoom Uchrashuvlar{% endblock %}
+
+{% block extrastyle %}
+<style>
+    .zoom-meetings-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px;
+    }
+    
+    .zoom-meetings-container h1 {
+        color: #417690;
+        margin-bottom: 30px;
+        font-size: 28px;
+    }
+    
+    .meetings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+    }
+    
+    .meeting-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+        border-left: 4px solid #417690;
+    }
+    
+    .meeting-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(65, 118, 144, 0.2);
+    }
+    
+    .meeting-card.live {
+        border-left-color: #dc3545;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        50% { box-shadow: 0 4px 25px rgba(220, 53, 69, 0.3); }
+    }
+    
+    .meeting-card h3 {
+        margin: 0 0 15px 0;
+        color: #417690;
+        font-size: 18px;
+    }
+    
+    .meeting-info {
+        margin-bottom: 15px;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .meeting-info span {
+        display: block;
+        margin-bottom: 5px;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
+    .status-scheduled {
+        background: #ffc107;
+        color: white;
+    }
+    
+    .status-live {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .status-completed {
+        background: #28a745;
+        color: white;
+    }
+    
+    .status-cancelled {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .meeting-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary {
+        background: #417690;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5b9ab5;
+    }
+    
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background: #218838;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+    
+    .empty-state h2 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="zoom-meetings-container">
+    <h1>📹 Zoom Uchrashuvlar</h1>
+    
+    {% if meetings %}
+    <div class="meetings-grid">
+        {% for meeting in meetings %}
+        <div class="meeting-card {% if meeting.is_live %}live{% endif %}">
+            <h3>{{ meeting.topic }}</h3>
+            
+            <div class="meeting-info">
+                <span>👨‍🏫 <strong>O'qituvchi:</strong> {{ meeting.teacher.full_name|default:meeting.teacher.username }}</span>
+                <span>📅 <strong>Boshlanish:</strong> {{ meeting.start_time|date:"d.m.Y H:i" }}</span>
+                <span>⏱️ <strong>Davomiyligi:</strong> {{ meeting.duration }} daqiqa</span>
+                {% if meeting.course %}
+                <span>📚 <strong>Kurs:</strong> {{ meeting.course.name }}</span>
+                {% endif %}
+            </div>
+            
+            <span class="status-badge status-{{ meeting.status }}">
+                {% if meeting.status == 'scheduled' %}
+                    Rejalashtirilgan
+                {% elif meeting.status == 'live' %}
+                    🔴 Jonli
+                {% elif meeting.status == 'completed' %}
+                    Tugallangan
+                {% elif meeting.status == 'cancelled' %}
+                    Bekor qilingan
+                {% endif %}
+            </span>
+            
+            <div class="meeting-actions">
+                {% if meeting.is_live or meeting.is_upcoming %}
+                <a href="{% url 'zoom:meeting_room' meeting.id %}" class="btn btn-primary">
+                    {% if meeting.is_live %}🔴 Kirish{% else %}🎬 Boshlash{% endif %}
+                </a>
+                <a href="{{ meeting.zoom_join_url }}" target="_blank" class="btn btn-success">
+                    🔗 Zoom orqali qo'shilish
+                </a>
+                {% endif %}
+                
+                {% if meeting.status == 'completed' and meeting.recordings.exists %}
+                <a href="#" class="btn btn-secondary">📹 Yozuvlarni ko'rish</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>📹 Hozircha uchrashuvlar yo'q</h2>
+        <p>Yangi uchrashuv yaratish uchun jadvalingizni tekshiring</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

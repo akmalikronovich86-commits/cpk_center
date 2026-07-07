@@ -1,0 +1,52 @@
+{% if widget.is_initial %}
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 0;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="color: #666; font-size: 13px;">Hozirda:</span>
+            <a href="{{ widget.value.url }}" target="_blank" style="color: #417690; text-decoration: none; font-size: 13px; font-weight: 500;">
+                📄 {{ widget.value.name|cut:"programs/" }}
+            </a>
+        </div>
+        
+        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; margin-left: 8px;">
+            <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}" style="margin: 0;">
+            <span style="color: #dc3545; font-size: 12px;">Aniq</span>
+        </label>
+        
+        <button type="button" onclick="document.getElementById('{{ widget.attrs.id }}').click()" 
+                style="background: #417690; color: white; border: none; padding: 6px 14px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            📁 Faylni yangilash
+        </button>
+        
+        <span id="{{ widget.attrs.id }}_name" style="color: #999; font-size: 12px; font-style: italic; margin-left: 8px;">Yangi fayl tanlanmagan</span>
+    </div>
+    
+    <input type="{{ widget.type }}" name="{{ widget.name }}" id="{{ widget.attrs.id }}" 
+           style="display: none;" 
+           {% include "django/forms/widgets/attrs.html" %}>
+    
+    <script>
+    (function() {
+        var fileInput = document.getElementById('{{ widget.attrs.id }}');
+        var fileNameDisplay = document.getElementById('{{ widget.attrs.id }}_name');
+        if (fileInput && fileNameDisplay) {
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    fileNameDisplay.innerHTML = '<span style="color: #417690; font-weight: bold;">✓</span> ' + this.files[0].name;
+                    fileNameDisplay.style.color = '#417690';
+                    fileNameDisplay.style.fontStyle = 'normal';
+                }
+            });
+        }
+    })();
+    </script>
+{% else %}
+    <div style="padding: 10px 0;">
+        <button type="button" onclick="document.getElementById('{{ widget.attrs.id }}').click()" 
+                style="background: #417690; color: white; border: none; padding: 6px 14px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            📁 Fayl tanlash
+        </button>
+        <input type="{{ widget.type }}" name="{{ widget.name }}" id="{{ widget.attrs.id }}" 
+               style="display: none;" 
+               {% include "django/forms/widgets/attrs.html" %}>
+    </div>
+{% endif %}
