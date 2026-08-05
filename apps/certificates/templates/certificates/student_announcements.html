@@ -1,0 +1,100 @@
+{% extends "certificates/base_student.html" %}
+
+{% block title %}E'lonlar va xabarlar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .announcements-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .announcement-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border-left: 5px solid #1e3a5f;
+        transition: transform 0.3s;
+    }
+    .announcement-card:hover {
+        transform: translateY(-3px);
+    }
+    .announcement-card.priority-high { border-left-color: #e53e3e; }
+    .announcement-card.priority-medium { border-left-color: #dd6b20; }
+    .announcement-card.priority-low { border-left-color: #48bb78; }
+    
+    .announcement-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 15px;
+    }
+    .announcement-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1e3a5f;
+        margin: 0;
+    }
+    .announcement-date {
+        font-size: 13px;
+        color: #718096;
+        white-space: nowrap;
+    }
+    .announcement-message {
+        color: #4a5568;
+        line-height: 1.6;
+        font-size: 15px;
+    }
+    .priority-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    .badge-high { background: #fed7d7; color: #742a2a; }
+    .badge-medium { background: #feebc8; color: #7c2d12; }
+    .badge-low { background: #c6f6d5; color: #22543d; }
+    
+    .empty-announcements {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="announcements-container">
+    <h2 style="color: white; text-align: center; margin-bottom: 30px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+        🔔 E'lonlar va muhim xabarlar
+    </h2>
+    
+    {% if announcements %}
+        {% for ann in announcements %}
+        <div class="announcement-card priority-{{ ann.priority }}">
+            <span class="priority-badge badge-{{ ann.priority }}">
+                {{ ann.get_priority_display }}
+            </span>
+            <div class="announcement-header">
+                <h3 class="announcement-title">{{ ann.title }}</h3>
+                <span class="announcement-date">{{ ann.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+            <div class="announcement-message">
+                {{ ann.message|linebreaks }}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-announcements">
+        <div style="font-size: 48px; margin-bottom: 15px;">📭</div>
+        <h3 style="color: #2d3748; margin-bottom: 10px;">Yangi e'lonlar yo'q</h3>
+        <p style="color: #718096;">Hozircha administrator tomonidan e'lonlar qo'shilmagan</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

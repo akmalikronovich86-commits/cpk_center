@@ -1,0 +1,58 @@
+{% if widget.is_initial %}
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 0;">
+        <!-- Текущий файл -->
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="color: #666; font-size: 13px;">Hozirda:</span>
+            <a href="{{ widget.value.url }}" target="_blank" style="color: #417690; text-decoration: none; font-size: 13px; font-weight: 500;">
+                 {{ widget.value.name|cut:"programs/" }}
+            </a>
+        </div>
+        
+        <!-- Чекбокс "Aniq" -->
+        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; margin-left: 8px;">
+            <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}" style="margin: 0;">
+            <span style="color: #dc3545; font-size: 12px;">Aniq</span>
+        </label>
+        
+        <!-- Кнопка обновления -->
+        <button type="button" onclick="document.getElementById('{{ widget.attrs.id }}').click()" 
+                style="background: #417690; color: white; border: none; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;"
+                onmouseover="this.style.background='#325b70'; this.style.transform='translateY(-1px)'" 
+                onmouseout="this.style.background='#417690'; this.style.transform='translateY(0)'">
+            <span>📁</span>
+            <span>Faylni yangilash</span>
+        </button>
+    </div>
+    
+    <!-- Скрытый input и отображение выбранного файла -->
+    <div style="margin-top: 8px;">
+        <input type="{{ widget.type }}" name="{{ widget.name }}" id="{{ widget.attrs.id }}" 
+               style="display: none;" 
+               {% include "django/forms/widgets/attrs.html" %}>
+        <div id="{{ widget.attrs.id }}_name" style="color: #666; font-size: 12px; font-style: italic; padding-left: 4px;">
+            Yangi fayl tanlanmagan
+        </div>
+    </div>
+    
+    <script>
+    (function() {
+        var fileInput = document.getElementById('{{ widget.attrs.id }}');
+        var fileNameDisplay = document.getElementById('{{ widget.attrs.id }}_name');
+        if (fileInput && fileNameDisplay) {
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    fileNameDisplay.innerHTML = '<span style="color: #417690; font-weight: bold;">✓ Tanlangan:</span> ' + this.files[0].name;
+                } else {
+                    fileNameDisplay.textContent = 'Yangi fayl tanlanmagan';
+                    fileNameDisplay.style.color = '#666';
+                }
+            });
+        }
+    })();
+    </script>
+{% else %}
+    <div style="padding: 8px 0;">
+        <input type="{{ widget.type }}" name="{{ widget.name }}" id="{{ widget.attrs.id }}" 
+               {% include "django/forms/widgets/attrs.html" %}>
+    </div>
+{% endif %}

@@ -1,0 +1,19 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+    <li>
+        <a href="{% url 'admin:users_studentprofile_import_excel' %}" 
+           class="button"
+           style="background: #28a745 !important; color: white !important; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; border: none;">
+             Excel dan import
+        </a>
+    </li>
+    <li>
+        <a href="{% url 'admin:users_studentprofile_add' %}" 
+           class="addlink"
+           style="background: #417690 !important; color: white !important; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; border: none;">
+            TINGLOVCHI PROFIL QO'SHISH
+        </a>
+    </li>
+{% endblock %}

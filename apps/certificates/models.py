@@ -1,10 +1,6 @@
 from django.db import models
 from django.utils import timezone
 import secrets
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.utils import timezone
-import secrets
 
 
 class Certificate(models.Model):
@@ -181,23 +177,3 @@ class Certificate(models.Model):
             registry_number=self.registry_number,
             created_by=self.created_by,
         )
-
-
-@receiver(post_save, sender=Certificate)
-def certificate_created_signal(sender, instance, created, **kwargs):
-    """Отправка email при создании сертификата"""
-    if created:
-        try:
-            # Получаем email студента
-            student_email = None
-            if hasattr(instance.student, 'email') and instance.student.email:
-                student_email = instance.student.email
-            
-            # Если есть email, отправляем уведомление
-            if student_email:
-                from .utils import send_certificate_email
-                send_certificate_email(instance, student_email)
-        except Exception as e:
-            # Если ошибка при отправке email, просто логируем
-            print(f"Email yuborishda xatolik: {e}")
-            pass

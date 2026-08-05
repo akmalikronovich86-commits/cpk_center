@@ -1,0 +1,40 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Кнопка Statistika в правой панели
+        var filterPanel = document.getElementById('changelist-filter');
+        if (filterPanel) {
+            var existingButton = filterPanel.querySelector('a[href="/groups/statistics/"]');
+            if (!existingButton) {
+                var container = document.createElement('div');
+                container.style.cssText = 'padding: 10px 15px; margin-bottom: 15px; border-bottom: 1px solid #e0e0e0;';
+                
+                var btn = document.createElement('a');
+                btn.href = '/groups/statistics/';
+                btn.textContent = '📊 Statistika';
+                btn.style.cssText = 'display: block; padding: 10px 15px; background: #417690; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; text-align: center; font-size: 13px; transition: background 0.2s;';
+                
+                btn.onmouseover = function() { this.style.background = '#325b70'; };
+                btn.onmouseout = function() { this.style.background = '#417690'; };
+                
+                container.appendChild(btn);
+                filterPanel.insertBefore(container, filterPanel.firstChild);
+            }
+        }
+        
+        // 2. Корректная нумерация T/R
+        var tbody = document.querySelector('#result_list tbody');
+        if (tbody) {
+            tbody.querySelectorAll('tr').forEach(function(row, i) {
+                var cells = row.querySelectorAll('td');
+                if (cells.length >= 2) {
+                    cells[1].innerHTML = '<span style="color:#666; font-weight:500;">' + (i + 1) + '</span>';
+                }
+            });
+        }
+    });
+    </script>
+    {{ block.super }}
+{% endblock %}

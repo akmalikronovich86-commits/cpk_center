@@ -9,8 +9,12 @@ def material_upload_path(instance, filename):
 
 class Material(models.Model):
     TYPE_CHOICES = (
+        ('document', 'Hujjat'),
         ('presentation', 'Taqdimot'),
         ('video', 'Video'),
+        ('audio', 'Audio'),
+        ('animation', 'Animatsiya'),
+        ('test', 'Test'),
         ('program', "O'quv dasturi"),
         ('control_questions', 'Nazorat savollari'),
         ('additional', "Qo'shimcha material"),
@@ -72,7 +76,10 @@ class Material(models.Model):
 
     def save(self, *args, **kwargs):
         if self.file:
-            self.file_size = self.file.size
+            try:
+                self.file_size = self.file.size
+            except (FileNotFoundError, OSError):
+                self.file_size = 0
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):

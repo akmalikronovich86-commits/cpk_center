@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 LANGUAGES = [
     ('uz', "O'zbek"),
@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'apps.courses',
     'apps.schedules',
     'apps.materials',
+    'apps.kpi',
+    'apps.lecturers',
     'apps.exams',
     'apps.reports',
     'apps.students',
@@ -49,6 +51,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.core.middleware.AdminAccessMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -169,11 +172,76 @@ ADMIN_SITE_TITLE = "Xodimlar Malakasini oshirish va Qayta tayyorlash Markazi"
 ADMIN_INDEX_TITLE = "Boshqaruv Paneli"
 
 
-# Email настройки
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Или ваш SMTP сервер
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = ''  # Ваш email
-EMAIL_HOST_PASSWORD = ''  # Ваш пароль
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+# Email настройки (для тестирования - вывод в консоль)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@cpk.uz'
+SERVER_EMAIL = 'noreply@cpk.uz'
+
+# Для продакшена (раскомментируйте и заполните):
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-app-password'
+
+
+# Redirect после входа/выхода
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'  # Умный редирект через smart_redirect view
+LOGOUT_REDIRECT_URL = '/login/'
+
+
+# Authentication backends
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+
+# =============================================================================
+# БЕЗОПАСНОСТЬ (Production)
+# =============================================================================
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_HSTS_SECONDS = 31536000  # 1 год
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Логирование
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': '/app/logs/django.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['file', 'console'],
+        'level': 'INFO',
+    },
+    'django': {
+        'handlers': ['file', 'console'],
+        'level': 'INFO',
+        'propagate': False,
+    },
+}

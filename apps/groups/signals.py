@@ -50,3 +50,61 @@ def update_student_record(sender, instance, **kwargs):
         
         if changed:
             record.save()
+
+
+
+@receiver(post_save, sender=StudentRecord)
+def student_record_created(sender, instance, created, **kwargs):
+    """Автоматическое создание User с паролем при создании StudentRecord"""
+    if created and not instance.user:
+        import secrets
+        from django.utils.crypto import get_random_string
+        from django.db.models.signals import post_save as ps_signal
+        from apps.users.models import User
+        import apps.groups.signals as signals_module
+        
+        # Генерируем username из паспорта
+        if instance.passport:
+            username = f"Tinglovchi_{instance.passport.replace(' ', '')}"
+        else:
+            username = f"Student_{secrets.token_hex(4)}"
+        
+        # Проверяем уникальность
+        counter = 1
+        original_username = username
+        while User.objects.filter(username=username).exists():
+            username = f"{original_username}_{counter}"
+            counter += 1
+        
+        # Генерируем случайный пароль
+        password = get_random_string(length=10)
+        
+        # Временно отключаем сигнал create_student_record, чтобы избежать дублирования
+        ps_signal.disconnect(signals_module.create_student_record, sender=User)
+        try:
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                email=instance.email or '',  # Используем email из StudentRecord
+                role='student',
+                full_name=instance.full_name or '',
+                phone=instance.phone or '',
+                position=instance.position or '',
+            )
+            # Привязываем пользователя к студенту
+            instance.user = user
+            instance.save(update_fields=['user'])
+        finally:
+            # Включаем сигнал обратно
+            ps_signal.connect(signals_module.create_student_record, sender=User)
+        
+        print(f"✅ Пользователь создан: {username}, пароль: {password}")
+        # Отправляем email с логином и паролем
+        if instance.email:
+            try:
+                from apps.certificates.utils import send_credentials_email
+                send_credentials_email(user, password)
+            except Exception as e:
+                print(f"️ Ошибка при отправке email: {e}")
+        else:
+            print(f"⚠️ Email не указан. Администратор может добавить email вручную.")

@@ -1,0 +1,138 @@
+{% extends "certificates/base_student.html" %}
+
+{% block title %}KPI Dashboard - {{ request.user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div style="padding: 30px; background-color: #f7fafc; min-height: 100vh;">
+    
+    <!-- Sarlavha -->
+    <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); color: white; padding: 30px 40px; border-radius: 15px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="font-size: 28px; margin: 0; font-weight: 700;">KPI Dashboard</h2>
+            <p style="margin: 5px 0 0 0; opacity: 0.9;">{{ request.user.get_full_name }}</p>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 14px; opacity: 0.8;">Joriy davr:</span>
+            <div style="font-size: 24px; font-weight: bold;">{{ total_kpi_score }} / {{ max_total_score }} ball</div>
+        </div>
+    </div>
+
+    <!-- KPI Kartochkalari -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-left: 5px solid #2c5282;">
+            <div style="color: #718096; font-size: 14px; font-weight: 600; margin-bottom: 10px;">Umumiy KPI ball</div>
+            <div style="font-size: 32px; font-weight: 800; color: #1e3a5f;">{{ total_kpi_score }}</div>
+            <div style="color: #48bb78; font-size: 14px; margin-top: 5px;">Maksimal: {{ max_total_score }} ({{ kpi_percentage }}%)</div>
+        </div>
+        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-left: 5px solid #4299e1;">
+            <div style="color: #718096; font-size: 14px; font-weight: 600; margin-bottom: 10px;">Jami kurslar</div>
+            <div style="font-size: 32px; font-weight: 800; color: #1e3a5f;">{{ total_courses }}</div>
+            <div style="color: #4a5568; font-size: 14px; margin-top: 5px;">Yangilangan: {{ updated_courses_this_month }}</div>
+        </div>
+        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-left: 5px solid #ed8936;">
+            <div style="color: #718096; font-size: 14px; font-weight: 600; margin-bottom: 10px;">O'quv materiallari</div>
+            <div style="font-size: 32px; font-weight: 800; color: #1e3a5f;">{{ total_materials }}</div>
+            <div style="color: #4a5568; font-size: 14px; margin-top: 5px;">Nashr qilingan: {{ published_materials }}</div>
+        </div>
+        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-left: 5px solid #48bb78;">
+            <div style="color: #718096; font-size: 14px; font-weight: 600; margin-bottom: 10px;">Ijro topshiriqlari</div>
+            <div style="font-size: 32px; font-weight: 800; color: #1e3a5f;">{{ total_ijro_tasks }}</div>
+            <div style="color: #e53e3e; font-size: 14px; margin-top: 5px;">Muddati o'tgan: {{ overdue_tasks }}</div>
+        </div>
+    </div>
+
+    <!-- Tezkor boshqaruv -->
+    <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 30px;">
+        <h3 style="color: #1e3a5f; margin-bottom: 20px; font-weight: 700; font-size: 18px;">⚡ Tezkor boshqaruv</h3>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <a href="/kpi/ijro-tasks/create/" style="background: #2c5282; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">➕ Yangi topshiriq</a>
+            <a href="/kpi/ijro-tasks/" style="background: #48bb78; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">📋 Barcha topshiriqlar</a>
+        </div
+    </div>
+
+    <!-- So'nggi Ijro topshiriqlari jadvali -->
+    <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 40px;">
+        <h3 style="color: #1e3a5f; margin-bottom: 20px; font-weight: 700; font-size: 18px;">📋 So'nggi Ijro topshiriqlari</h3>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                    <tr style="background: #f7fafc; color: #4a5568;">
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Raqam</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Nomi</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Muddati</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Holati</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in recent_ijro_tasks %}
+                    <tr style="border-bottom: 1px solid #edf2f7;">
+                        <td style="padding: 12px;">{{ task.task_number }}</td>
+                        <td style="padding: 12px; font-weight: 600;">{{ task.title }}</td>
+                        <td style="padding: 12px;">{{ task.deadline|date:"d.m.Y" }}</td>
+                        <td style="padding: 12px;">
+                            {% if task.status == 'new' %}<span style="background: #ebf8ff; color: #2b6cb0; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Yangi</span>
+                            {% elif task.status == 'in_progress' %}<span style="background: #fffaf0; color: #c05621; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Jarayonda</span>
+                            {% elif task.status == 'completed' %}<span style="background: #f0fff4; color: #276749; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Bajarildi</span>
+                            {% else %}<span style="background: #fff5f5; color: #c53030; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Muddati o'tgan</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="padding: 20px; text-align: center; color: #718096;">Hozircha topshiriqlar yo'q</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============ DIAGRAMMALAR (Chart.js) - O'ZBEK TILIDA ============ -->
+    <div style="margin-top: 50px; margin-bottom: 40px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+                <h3 style="text-align: center; color: #1e3a5f; margin-bottom: 20px; font-weight: 700; font-size: 18px;">📊 Ijro topshiriqlari holati</h3>
+                <div style="height: 320px; position: relative;"><canvas id="ijroStatusChart"></canvas></div>
+            </div>
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+                <h3 style="text-align: center; color: #1e3a5f; margin-bottom: 20px; font-weight: 700; font-size: 18px;">🎯 KPI ballari taqsimoti</h3>
+                <div style="height: 320px; position: relative;"><canvas id="kpiScoreChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctxIjro = document.getElementById('ijroStatusChart');
+        if (ctxIjro && {{ ijro_status_counts|length }} > 0) {
+            new Chart(ctxIjro, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ ijro_status_labels|safe }},
+                    datasets: [{ data: {{ ijro_status_counts|safe }}, backgroundColor: ['#ed8936', '#4299e1', '#48bb78', '#e53e3e'], borderWidth: 2, borderColor: '#fff', hoverOffset: 8 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 20, font: { size: 13, weight: '600' } } } } }
+            });
+        }
+        const ctxKpi = document.getElementById('kpiScoreChart');
+        if (ctxKpi && {{ kpi_category_labels|length }} > 0) {
+            new Chart(ctxKpi, {
+                type: 'bar',
+                data: {
+                    labels: {{ kpi_category_labels|safe }},
+                    datasets: [
+                        { label: 'Olingan ball', data: {{ kpi_category_scores|safe }}, backgroundColor: '#2c5282', borderRadius: 8 },
+                        { label: 'Maksimal ball', data: {{ kpi_category_max|safe }}, backgroundColor: '#e2e8f0', borderRadius: 8 }
+                    ]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, grid: { color: '#f0f0f0' }, title: { display: true, text: 'Ball' } }, x: { grid: { display: false }, title: { display: true, text: 'KPI kategoriyalari' } } },
+                    plugins: { legend: { position: 'bottom', labels: { padding: 20, font: { size: 13, weight: '600' } } } }
+                }
+            });
+        }
+    });
+    </script>
+    <!-- ============ DIAGRAMMALAR TAMOM ============ -->
+
+</div>
+{% endblock %}

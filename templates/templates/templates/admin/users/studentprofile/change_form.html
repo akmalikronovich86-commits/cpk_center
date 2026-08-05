@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block content_title %}
+    {% if original %}
+        <h1>Tinglovchi profilini tahrirlash: {{ original }}</h1>
+    {% else %}
+        <h1>Yangi tinglovchi profili qo'shish</h1>
+    {% endif %}
+{% endblock %}

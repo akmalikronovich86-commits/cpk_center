@@ -1,0 +1,377 @@
+from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.utils import timezone
+from datetime import timedelta
+import openpyxl
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from io import BytesIO
+
+from .models import KPICategory, KPIIndicator, KPIReport, KPIValue, IjroTask
+from .forms import KPIReportForm, KPIValueForm, IjroTaskForm
+from apps.courses.models import Course
+from apps.materials.models import Material
+from apps.schedules.models import Schedule, Attendance
+from apps.groups.models import StudentRecord
+from apps.users.models import User
+
+@login_required
+def department_head_kpi_dashboard(request):
+    """Основной дашборд KPI для начальника отдела с фильтрами"""
+    # Обработка фильтров из GET-параметров
+    period = request.GET.get('period', 'month')  # week, month, quarter, year
+    lecturer_id = request.GET.get('lecturer', '')
+    
+    today = timezone.now().date()
+    
+    # Определяем период фильтрации
+    if period == 'week':
+        current_month_start = today - timedelta(days=today.weekday())
+        current_month_end = current_month_start + timedelta(days=6)
+    elif period == 'quarter':
+        current_month = today.month
+        quarter_start_month = ((current_month - 1) // 3) * 3 + 1
+        current_month_start = today.replace(month=quarter_start_month, day=1)
+        current_month_end = (current_month_start + timedelta(days=92)).replace(day=1) - timedelta(days=1)
+    elif period == 'year':
+        current_month_start = today.replace(month=1, day=1)
+        current_month_end = today.replace(month=12, day=31)
+    else:  # month (по умолчанию)
+        current_month_start = today.replace(day=1)
+        current_month_end = (current_month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+    
+    # KPI данные
+    total_courses = Course.objects.count()
+    updated_courses_this_month = Course.objects.filter(
+        updated_at__gte=current_month_start,
+        updated_at__lte=current_month_end
+    ).count() if hasattr(Course, 'updated_at') else 0
+    
+    total_materials = Material.objects.count()
+    published_materials = Material.objects.filter(is_published=True).count() if hasattr(Material, 'is_published') else 0
+    materials_this_month = Material.objects.filter(
+        created_at__gte=current_month_start,
+        created_at__lte=current_month_end
+    ).count() if hasattr(Material, 'created_at') else 0
+    
+    total_schedules = Schedule.objects.count()
+    schedules_this_month = Schedule.objects.filter(
+        date__gte=current_month_start,
+        date__lte=current_month_end
+    ).count() if hasattr(Schedule, 'date') else 0
+    
+    total_students = StudentRecord.objects.count()
+    active_students = StudentRecord.objects.filter(is_active=True).count() if hasattr(StudentRecord, 'is_active') else total_students
+    
+    # Ijro задачи
+    total_ijro_tasks = IjroTask.objects.filter(assigned_to=request.user).count()
+    completed_tasks = IjroTask.objects.filter(assigned_to=request.user, status='completed').count()
+    overdue_tasks = IjroTask.objects.filter(
+        assigned_to=request.user,
+        deadline__lt=today,
+        status__in=['new', 'in_progress']
+    ).count()
+    in_progress_tasks = IjroTask.objects.filter(assigned_to=request.user, status='in_progress').count()
+    
+    # Расчет KPI баллов
+    kpi_scores = {
+        'methodical': {
+            'name': "Uslubiy ta'minlash",
+            'max_score': 20,
+            'actual': updated_courses_this_month,
+            'target': 5,
+            'score': min(20, (updated_courses_this_month / 5) * 20) if updated_courses_this_month > 0 else 0
+        },
+        'materials': {
+            'name': "O'quv-uslubiy qo'llanmalar",
+            'max_score': 10,
+            'actual': materials_this_month,
+            'target': 3,
+            'score': min(10, (materials_this_month / 3) * 10) if materials_this_month > 0 else 0
+        },
+        'documentation': {
+            'name': "O'quv hujjatlari",
+            'max_score': 15,
+            'actual': schedules_this_month,
+            'target': 20,
+            'score': min(15, (schedules_this_month / 20) * 15) if schedules_this_month > 0 else 0
+        },
+        'ijro': {
+            'name': "Ijro.gov.uz topshiriqlari",
+            'max_score': 20,
+            'actual': completed_tasks,
+            'target': total_ijro_tasks,
+            'score': (completed_tasks / total_ijro_tasks * 20) if total_ijro_tasks > 0 else 20
+        }
+    }
+    
+    total_kpi_score = sum(kpi['score'] for kpi in kpi_scores.values())
+    max_total_score = sum(kpi['max_score'] for kpi in kpi_scores.values())
+    kpi_percentage = (total_kpi_score / max_total_score * 100) if max_total_score > 0 else 0
+    
+    recent_ijro_tasks = IjroTask.objects.filter(assigned_to=request.user).order_by('-deadline')[:10]
+    
+    # ===== ОПЕРАТИВНЫЕ ДАННЫЕ =====
+    
+    # Расписание на сегодня и завтра
+    from django.utils import timezone as tz
+    today = tz.now().date()
+    tomorrow = today + timedelta(days=1)
+    
+    today_schedules = Schedule.objects.filter(date=today).order_by('start_time')[:5] if hasattr(Schedule, 'date') else []
+    tomorrow_schedules = Schedule.objects.filter(date=tomorrow).order_by('start_time')[:5] if hasattr(Schedule, 'date') else []
+    
+    # Преподаватели с нагрузкой
+    from django.db.models import Count
+    lecturers_with_load = User.objects.filter(
+        role='lecturer',
+        is_active=True
+    ).annotate(
+        schedule_count=Count('lecturer_schedules')
+    ).order_by('-schedule_count')[:8]
+    
+    # Курсы по направлениям
+    # Фильтр по лектору
+    lecturer_filter = {}
+    if lecturer_id:
+        lecturer_filter['lecturer_id'] = lecturer_id
+    
+    courses_by_lecturer = Course.objects.filter(
+        updated_at__gte=current_month_start,
+        updated_at__lte=current_month_end,
+        **lecturer_filter
+    ).values('lecturer__last_name', 'lecturer__first_name').annotate(
+        count=Count('id')
+    ).order_by('-count')[:6]
+    
+    # Слушатели по статусу
+    active_students = StudentRecord.objects.filter(is_active=True).count() if hasattr(StudentRecord, 'is_active') else 0
+    inactive_students = StudentRecord.objects.filter(is_active=False).count() if hasattr(StudentRecord, 'is_active') else 0
+    
+    # Посещаемость за последние 7 дней
+    from django.db.models import Avg
+    week_ago = today - timedelta(days=7)
+    
+    attendance_stats = []
+    for i in range(7):
+        day = today - timedelta(days=6-i)
+        day_attendance = Attendance.objects.filter(
+            date=day
+        ).aggregate(
+            total=Count('id'),
+            present=Count('id', filter=Q(status='present'))
+        ) if hasattr(Attendance, 'date') else {'total': 0, 'present': 0}
+        
+        rate = (day_attendance['present'] / day_attendance['total'] * 100) if day_attendance['total'] > 0 else 0
+        attendance_stats.append({
+            'day': day.strftime('%d.%m'),
+            'rate': round(rate, 1),
+            'total': day_attendance['total'],
+        })
+    
+    avg_attendance = sum(s['rate'] for s in attendance_stats) / len(attendance_stats) if attendance_stats else 0
+    
+    context = {
+        'today': today,
+        'current_month_start': current_month_start,
+        'current_month_end': current_month_end,
+        'kpi_scores': kpi_scores,
+        'total_kpi_score': round(total_kpi_score, 2),
+        'max_total_score': max_total_score,
+        'kpi_percentage': round(kpi_percentage, 1),
+        'total_courses': total_courses,
+        'updated_courses_this_month': updated_courses_this_month,
+        'total_materials': total_materials,
+        'published_materials': published_materials,
+        'materials_this_month': materials_this_month,
+        'total_schedules': total_schedules,
+        'schedules_this_month': schedules_this_month,
+        'total_students': total_students,
+        'active_students': active_students,
+        'total_ijro_tasks': total_ijro_tasks,
+        'completed_tasks': completed_tasks,
+        'overdue_tasks': overdue_tasks,
+        'in_progress_tasks': in_progress_tasks,
+        'recent_ijro_tasks': recent_ijro_tasks,
+        
+        # Оперативные данные
+        'today_schedules': today_schedules,
+        'tomorrow_schedules': tomorrow_schedules,
+        'lecturers_with_load': lecturers_with_load,
+        'courses_by_lecturer': courses_by_lecturer,
+        'active_students': active_students,
+        'inactive_students': inactive_students,
+        'attendance_stats': attendance_stats,
+        'avg_attendance': round(avg_attendance, 1),
+    }
+    # --- ДАННЫЕ ДЛЯ ГРАФИКОВ (Chart.js) ---
+    lecturer_labels = [f"{item.get('lecturer__last_name', '')} {item.get('lecturer__first_name', '')}".strip() for item in courses_by_lecturer] if courses_by_lecturer else []
+    lecturer_data = [item.get('count', 0) for item in courses_by_lecturer] if courses_by_lecturer else []
+    
+    if isinstance(attendance_stats, dict):
+        attendance_labels = list(attendance_stats.keys())
+        attendance_data = list(attendance_stats.values())
+    else:
+        attendance_labels = []
+        attendance_data = []
+        
+    context['lecturer_labels'] = lecturer_labels
+    context['lecturer_data'] = lecturer_data
+    context['attendance_labels'] = attendance_labels
+    context['attendance_data'] = attendance_data
+
+    
+    
+    # Список всех лекторов для фильтра (User уже импортирован в начале файла)
+    lecturers_list = User.objects.filter(role='lecturer').order_by('last_name', 'first_name')
+    context['lecturers_list'] = lecturers_list
+    context['current_period'] = period
+    context['current_lecturer_id'] = lecturer_id
+    
+    # === БЕЗОПАСНОЕ ДОБАВЛЕНИЕ: Данные для диаграмм (Chart.js) ===
+    from django.db.models import Count
+    ijro_status_qs = IjroTask.objects.filter(assigned_to=request.user).values('status').annotate(count=Count('id'))
+    status_names = {'new': 'Yangi', 'in_progress': 'Jarayonda', 'completed': 'Bajarildi', 'overdue': "Muddati o'tgan"}
+    
+    context['ijro_status_labels'] = [status_names.get(item['status'], item['status']) for item in ijro_status_qs]
+    context['ijro_status_counts'] = [item['count'] for item in ijro_status_qs]
+    
+    context['kpi_category_labels'] = [kpi['name'] for kpi in kpi_scores.values()]
+    context['kpi_category_scores'] = [round(kpi['score'], 1) for kpi in kpi_scores.values()]
+    context['kpi_category_max'] = [kpi['max_score'] for kpi in kpi_scores.values()]
+    # === КОНЕЦ ДОБАВЛЕНИЯ ===
+    return render(request, 'kpi/department_head_kpi_dashboard.html', context)
+
+@login_required
+def export_kpi_report_excel(request):
+    """Экспорт отчета KPI в Excel"""
+    today = timezone.now().date()
+    current_month_start = today.replace(day=1)
+    current_month_end = (current_month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "KPI Отчет"
+    
+    header_font = Font(bold=True, size=12, color="FFFFFF")
+    header_fill = PatternFill(start_color="1e3a5f", end_color="1e3a5f", fill_type="solid")
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    center_align = Alignment(horizontal='center', vertical='center')
+    
+    ws.merge_cells('A1:D1')
+    ws['A1'] = f"KPI BO'YICHA HISOBOT - {request.user.get_full_name()}"
+    ws['A1'].font = Font(bold=True, size=16)
+    ws['A1'].alignment = center_align
+    
+    ws.merge_cells('A2:D2')
+    ws['A2'] = f"Davri: {current_month_start.strftime('%d.%m.%Y')} - {current_month_end.strftime('%d.%m.%Y')}"
+    ws['A2'].alignment = center_align
+    
+    headers = ["Ko'rsatkich", "Vazni (ballar)", "Haqiqiy qiymat", "Olingan ballar"]
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=4, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = center_align
+        cell.border = thin_border
+    
+    kpi_data = [
+        ["O'quv jarayonlarini uslubiy ta'minlash", 20, '...', 0],
+        ["O'quv-uslubiy qo'llanmalar ishlab chiqish", 10, '...', 0],
+        ["O'quv hujjatlarini sifatli yuritish", 15, '...', 0],
+        ["Ijro.gov.uz topshiriqlarini bajarish", 20, '...', 0],
+    ]
+    
+    for row_idx, row_data in enumerate(kpi_data, 5):
+        for col_idx, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=value)
+            cell.border = thin_border
+            if col_idx == 1:
+                cell.alignment = Alignment(wrap_text=True, vertical='center')
+    
+    total_row = 9
+    ws.merge_cells(f'A{total_row}:B{total_row}')
+    ws.cell(row=total_row, column=1, value='JAMI:').font = Font(bold=True)
+    ws.cell(row=total_row, column=3, value='').border = thin_border
+    ws.cell(row=total_row, column=4, value='0.00').border = thin_border
+    
+    ws.column_dimensions['A'].width = 50
+    ws.column_dimensions['B'].width = 15
+    ws.column_dimensions['C'].width = 25
+    ws.column_dimensions['D'].width = 20
+    
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    response = HttpResponse(buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="KPI_otchet_{request.user.username}_{today.strftime("%Y%m")}.xlsx"'
+    
+    return response
+
+@login_required
+def ijro_tasks_list(request):
+    """Список задач Ijro.gov.uz"""
+    tasks = IjroTask.objects.filter(assigned_to=request.user).order_by('-deadline')
+    
+    status = request.GET.get('status')
+    if status:
+        tasks = tasks.filter(status=status)
+    
+    context = {
+        'tasks': tasks,
+        'statuses': [
+            ('new', 'Yangi'),
+            ('in_progress', 'Jarayonda'),
+            ('completed', 'Bajarildi'),
+            ('overdue', "Muddati o'tgan")
+        ]
+    }
+    return render(request, 'kpi/ijro_tasks_list.html', context)
+
+@login_required
+def ijro_task_create(request):
+    """Создание новой задачи Ijro"""
+    if request.method == 'POST':
+        form = IjroTaskForm(request.POST)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.assigned_to = request.user
+            task.save()
+            return redirect('kpi:ijro_tasks_list')
+    else:
+        form = IjroTaskForm()
+    
+    return render(request, 'kpi/ijro_task_form.html', {'form': form, "title": "Yangi topshiriq qo'shish"})
+
+@login_required
+def ijro_task_update(request, task_id):
+    """Редактирование задачи Ijro"""
+    task = get_object_or_404(IjroTask, id=task_id, assigned_to=request.user)
+    
+    if request.method == 'POST':
+        form = IjroTaskForm(request.POST, instance=task)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Ma'lumotlar muvaffaqiyatli saqlandi!")
+            return redirect('kpi:ijro_tasks_list')
+    else:
+        form = IjroTaskForm(instance=task)
+    
+    return render(request, 'kpi/ijro_task_form.html', {'form': form, "title": "Topshiriqni tahrirlash", 'task': task})
+
+
+def ijro_task_delete(request, task_id):
+    """Удаление задачи Ijro"""
+    task = get_object_or_404(IjroTask, id=task_id)
+    if request.method == 'POST':
+        task.delete()
+        return redirect('kpi:ijro_tasks_list')
+    return redirect('kpi:ijro_tasks_list')

@@ -1,0 +1,18 @@
+{% extends "certificates/base_student.html" %}
+{% block title %}O'chirishni tasdiqlash{% endblock %}
+{% block content %}
+<div style="padding: 30px; max-width: 600px; margin: 0 auto;">
+    <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+        <h2 style="color: #e53e3e; margin-bottom: 20px;">⚠️ O'chirishni tasdiqlang</h2>
+        <p style="font-size: 16px; margin-bottom: 20px;">Haqiqatan ham bu <strong>{{ type }}</strong>ni o'chirmoqchimisiz?</p>
+        <p style="background: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;"><strong>{{ object }}</strong></p>
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" style="background: #e53e3e; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">✅ Ha, o'chirish</button>
+                <a href="javascript:history.back()" style="background: #718096; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">❌ Bekor qilish</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
