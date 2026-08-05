@@ -1,0 +1,540 @@
+{% extends "certificates/base_student.html" %}
+
+{% block title %}Direktor paneli{% endblock %}
+
+{% block extra_css %}
+<style>
+    .director-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        color: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 10px 30px rgba(30, 58, 95, 0.3);
+    }
+    .director-header h2 {
+        font-size: 28px;
+        margin-bottom: 5px;
+        font-weight: 700;
+    }
+    .director-header p {
+        opacity: 0.85;
+        font-size: 15px;
+    }
+    .date-badge {
+        background: rgba(255,255,255,0.15);
+        padding: 15px 25px;
+        border-radius: 10px;
+        text-align: right;
+    }
+    .date-badge .day {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1;
+    }
+    .date-badge .month-year {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 5px;
+    }
+    
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .kpi-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border-left: 4px solid #1e3a5f;
+        transition: transform 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-3px); }
+    .kpi-card.blue { border-left-color: #3182ce; }
+    .kpi-card.green { border-left-color: #48bb78; }
+    .kpi-card.orange { border-left-color: #ed8936; }
+    .kpi-card.purple { border-left-color: #805ad5; }
+    .kpi-card.red { border-left-color: #e53e3e; }
+    
+    .kpi-icon {
+        font-size: 28px;
+        margin-bottom: 10px;
+    }
+    .kpi-value {
+        font-size: 36px;
+        font-weight: 700;
+        color: #1a202c;
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+    .kpi-label {
+        font-size: 13px;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+    .kpi-sub {
+        font-size: 12px;
+        color: #a0aec0;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #edf2f7;
+    }
+    
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 25px;
+        margin-bottom: 25px;
+    }
+    @media (max-width: 1024px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+    }
+    
+    .section {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #edf2f7;
+    }
+    .section-header h3 {
+        color: #1a202c;
+        font-size: 18px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .section-header .count {
+        background: #edf2f7;
+        color: #4a5568;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .alerts-container {
+        display: grid;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    .alert {
+        padding: 18px 20px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        border-left: 4px solid;
+    }
+    .alert.warning {
+        background: #fffaf0;
+        border-left-color: #ed8936;
+        color: #7b341e;
+    }
+    .alert.info {
+        background: #ebf8ff;
+        border-left-color: #3182ce;
+        color: #2c5282;
+    }
+    .alert.success {
+        background: #f0fff4;
+        border-left-color: #48bb78;
+        color: #22543d;
+    }
+    .alert.danger {
+        background: #fff5f5;
+        border-left-color: #e53e3e;
+        color: #742a2a;
+    }
+    .alert-icon { font-size: 24px; }
+    .alert-content h4 {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 3px;
+    }
+    .alert-content p {
+        font-size: 13px;
+        opacity: 0.85;
+    }
+    
+    .course-item {
+        padding: 15px;
+        background: #f7fafc;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.2s;
+    }
+    .course-item:hover { background: #edf2f7; }
+    .course-item h4 {
+        font-size: 15px;
+        color: #2d3748;
+        margin-bottom: 3px;
+    }
+    .course-item p {
+        font-size: 12px;
+        color: #718096;
+    }
+    .course-badge {
+        background: #1e3a5f;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    
+    .lecturer-item {
+        padding: 15px;
+        border-bottom: 1px solid #edf2f7;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .lecturer-item:last-child { border-bottom: none; }
+    .lecturer-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
+    }
+    .lecturer-info { flex: 1; }
+    .lecturer-info h4 {
+        font-size: 14px;
+        color: #2d3748;
+        margin-bottom: 3px;
+    }
+    .lecturer-stats {
+        display: flex;
+        gap: 12px;
+        font-size: 12px;
+        color: #718096;
+    }
+    .lecturer-stats span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .chart-container {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        height: 150px;
+        gap: 15px;
+        padding: 10px 0;
+    }
+    .chart-bar-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100%;
+    }
+    .chart-bar {
+        width: 100%;
+        background: linear-gradient(180deg, #3182ce 0%, #1e3a5f 100%);
+        border-radius: 6px 6px 0 0;
+        position: relative;
+        min-height: 8px;
+        transition: all 0.3s;
+    }
+    .chart-bar:hover {
+        background: linear-gradient(180deg, #63b3ed 0%, #2c5282 100%);
+    }
+    .chart-bar-value {
+        position: absolute;
+        top: -22px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        font-weight: 700;
+        color: #2d3748;
+    }
+    .chart-bar-label {
+        font-size: 11px;
+        color: #718096;
+        margin-top: 8px;
+        font-weight: 600;
+    }
+    
+    .schedule-item {
+        padding: 15px;
+        background: #f7fafc;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border-left: 4px solid #48bb78;
+    }
+    .schedule-item.live { border-left-color: #e53e3e; }
+    .schedule-item h4 {
+        font-size: 14px;
+        color: #2d3748;
+        margin-bottom: 5px;
+    }
+    .schedule-meta {
+        display: flex;
+        gap: 15px;
+        font-size: 12px;
+        color: #718096;
+        flex-wrap: wrap;
+    }
+    .schedule-meta span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .live-badge {
+        display: inline-block;
+        background: #e53e3e;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        margin-left: 8px;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 30px 20px;
+        color: #a0aec0;
+    }
+    .empty-state-icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ШАПКА -->
+<div class="director-header">
+    <div>
+        <h2>👋 Xush kelibsiz, {{ request.user.first_name|default:request.user.username }}!</h2>
+        <p>Malaka oshirish markazi faoliyati monitoringi</p>
+    </div>
+    <div class="date-badge">
+        <div class="day">{{ today|date:"d" }}</div>
+        <div class="month-year">{{ today|date:"F Y" }}</div>
+    </div>
+</div>
+
+<!-- АЛЕРТЫ -->
+{% if alerts %}
+<div class="alerts-container">
+    {% for alert in alerts %}
+    <div class="alert {{ alert.type }}">
+        <div class="alert-icon">{{ alert.icon }}</div>
+        <div class="alert-content">
+            <h4>{{ alert.title }}</h4>
+            <p>{{ alert.message }}</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- KPI КАРТОЧКИ -->
+<div class="kpi-grid">
+    <div class="kpi-card blue">
+        <div class="kpi-icon">🎓</div>
+        <div class="kpi-value">{{ total_students }}</div>
+        <div class="kpi-label">Jami tinglovchilar</div>
+        <div class="kpi-sub">{{ active_students }} faol</div>
+    </div>
+    
+    <div class="kpi-card green">
+        <div class="kpi-icon"></div>
+        <div class="kpi-value">{{ active_courses }}</div>
+        <div class="kpi-label">Faol kurslar</div>
+        <div class="kpi-sub">Hozir ishlayapti</div>
+    </div>
+    
+    <div class="kpi-card orange">
+        <div class="kpi-icon">👨‍🏫</div>
+        <div class="kpi-value">{{ total_lecturers }}</div>
+        <div class="kpi-label">O'qituvchilar</div>
+        <div class="kpi-sub">Faol ma'ruzachilar</div>
+    </div>
+    
+    <div class="kpi-card purple">
+        <div class="kpi-icon">📜</div>
+        <div class="kpi-value">{{ total_certificates }}</div>
+        <div class="kpi-label">Jami sertifikatlar</div>
+        <div class="kpi-sub">{{ certs_this_month }} shu oyda</div>
+    </div>
+    
+    <div class="kpi-card red">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-value">{{ certs_this_year }}</div>
+        <div class="kpi-label">Shu yilda</div>
+        <div class="kpi-sub">Berilgan sertifikatlar</div>
+    </div>
+    
+    <div class="kpi-card">
+        <div class="kpi-icon">📅</div>
+        <div class="kpi-value">{{ today_schedules }}</div>
+        <div class="kpi-label">Bugungi darslar</div>
+        <div class="kpi-sub">{{ upcoming_zoom }} onlayn uchrashuvlar</div>
+    </div>
+</div>
+
+<!-- ОСНОВНОЙ ГРИД -->
+<div class="dashboard-grid">
+    <!-- АКТИВНЫЕ КУРСЫ -->
+    <div class="section">
+        <div class="section-header">
+            <h3> Faol kurslar</h3>
+            <span class="count">{{ courses|length }}</span>
+        </div>
+        {% if courses %}
+        <div>
+            {% for course in courses %}
+            <div class="course-item">
+                <div>
+                    <h4>{{ course.title|default:course.code }}</h4>
+                    <p>{{ course.code|default:"" }} {% if course.direction %}· {{ course.direction }}{% endif %}</p>
+                </div>
+                <span class="course-badge">Kurs</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <p>Kurslar hali qo'shilmagan</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- ТОП ПРЕПОДАВАТЕЛЕЙ -->
+    <div class="section">
+        <div class="section-header">
+            <h3>👨🏫 O'qituvchilar</h3>
+        </div>
+        {% if top_lecturers %}
+        <div>
+            {% for lecturer in top_lecturers %}
+            <div class="lecturer-item">
+                <div class="lecturer-avatar">
+                    {{ lecturer.first_name|slice:":1"|default:"?" }}{{ lecturer.last_name|slice:":1"|default:"" }}
+                </div>
+                <div class="lecturer-info">
+                    <h4>{{ lecturer.get_full_name|default:lecturer.username }}</h4>
+                    <div class="lecturer-stats">
+                        <span>📚 {{ lecturer.materials_count }} material</span>
+                        <span>🎥 {{ lecturer.meetings_count }} uchrashuv</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <p>Faol o'qituvchilar yo'q</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ВТОРОЙ ГРИД -->
+<div class="dashboard-grid">
+    <!-- ДИНАМИКА СЕРТИФИКАЦИИ -->
+    <div class="section">
+        <div class="section-header">
+            <h3>📈 Sertifikatlash dinamikasi (6 oy)</h3>
+        </div>
+        <div class="chart-container">
+            {% for stat in monthly_stats %}
+            <div class="chart-bar-wrapper">
+                <div class="chart-bar" style="height: {% widthratio stat.count max_monthly 100 %}%; margin-top: auto;">
+                    {% if stat.count > 0 %}
+                    <div class="chart-bar-value">{{ stat.count }}</div>
+                    {% endif %}
+                </div>
+                <div class="chart-bar-label">{{ stat.month }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- БЛИЖАЙШИЕ ЗАНЯТИЯ -->
+    <div class="section">
+        <div class="section-header">
+            <h3>🎥 Yaqinlashayotgan darslar</h3>
+        </div>
+        {% if upcoming_schedules %}
+        <div>
+            {% for meeting in upcoming_schedules %}
+            <div class="schedule-item {% if meeting.is_live %}live{% endif %}">
+                <h4>
+                    {{ meeting.topic }}
+                    {% if meeting.is_live %}<span class="live-badge">● LIVE</span>{% endif %}
+                </h4>
+                <div class="schedule-meta">
+                    <span>📅 {{ meeting.start_time|date:"d.m.Y H:i" }}</span>
+                    {% if meeting.course %}<span>📚 {{ meeting.course.code|default:"" }}</span>{% endif %}
+                    {% if meeting.teacher %}<span>‍🏫 {{ meeting.teacher.get_full_name|default:meeting.teacher.username|truncatechars:20 }}</span>{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📅</div>
+            <p>Rejalashtirilgan darslar yo'q</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ОПУБЛИКОВАННЫЕ МАТЕРИАЛЫ -->
+<div class="section" style="margin-top: 25px;">
+    <div class="section-header">
+        <h3>📊 O'quv materiallari</h3>
+    </div>
+    <div class="kpi-grid" style="margin-bottom: 0;">
+        <div class="kpi-card green" style="border-left-color: #48bb78;">
+            <div class="kpi-icon">✅</div>
+            <div class="kpi-value">{{ published_materials }}</div>
+            <div class="kpi-label">Nashr etilgan</div>
+        </div>
+        <div class="kpi-card orange">
+            <div class="kpi-icon"></div>
+            <div class="kpi-value">{{ unpublished_materials }}</div>
+            <div class="kpi-label">Nashrni kutmoqda</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

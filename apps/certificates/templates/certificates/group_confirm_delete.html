@@ -1,0 +1,28 @@
+{% extends "certificates/base_student.html" %}
+
+{% block title %}O'quv guruhini o'chirish{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 50px auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); text-align: center;">
+    <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
+    <h2 style="color: #1e3a5f; margin-bottom: 20px;">O'quv guruhini o'chirish</h2>
+    <p style="font-size: 16px; color: #4a5568; margin-bottom: 30px;">
+        Haqiqatan ham <strong>{{ group.name }}</strong> guruhini o'chirmoqchimisiz?
+    </p>
+    <p style="color: #e53e3e; font-size: 14px; margin-bottom: 30px;">
+        Bu amalni qaytarib bo'lmaydi!
+    </p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <button type="submit" style="background: #e53e3e; color: white; padding: 12px 30px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer;">
+                ✅ Ha, o'chirish
+            </button>
+            <a href="{% url 'kpi:department_head_kpi_dashboard' %}" style="background: #edf2f7; color: #4a5568; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                ❌ Yo'q, bekor qilish
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

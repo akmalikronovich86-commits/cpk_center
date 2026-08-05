@@ -1,0 +1,67 @@
+{% extends "admin/change_list.html" %}
+
+{% block result_list %}
+    {{ block.super }}
+    
+    {% if module_stats %}
+    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 4px;">
+        <h3 style="margin-top: 0; margin-bottom: 12px; color: #417690; font-size: 16px; text-align: center; border-bottom: 2px solid #417690; padding-bottom: 8px;">
+            📊 Umumiy statistika
+        </h3>
+        
+        <!-- Statistika kartochkalari -->
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <!-- Jami soatlar -->
+            <div style="flex: 1; min-width: 150px; padding: 12px; background: #417690; border-radius: 4px; color: white; text-align: center;">
+                <div style="font-size: 11px; opacity: 0.9; margin-bottom: 4px;">📚 Jami soatlar</div>
+                <div style="font-size: 24px; font-weight: bold; margin-bottom: 2px;">
+                    {{ module_stats.total_hours }}
+                </div>
+                <div style="font-size: 10px; opacity: 0.8;">
+                    {{ module_stats.total_modules }} modul
+                </div>
+            </div>
+            
+            <!-- Nazariy -->
+            <div style="flex: 1; min-width: 150px; padding: 12px; background: white; border-radius: 4px; border-left: 3px solid #417690; border: 1px solid #e0e0e0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-size: 13px; font-weight: bold; color: #417690;">📖 Nazariy</div>
+                    <div style="background: #79aec8; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">
+                        {{ module_stats.nazariy_percent }}%
+                    </div>
+                </div>
+                <div style="font-size: 20px; font-weight: bold; color: #417690; margin-bottom: 4px;">
+                    {{ module_stats.nazariy_hours }}
+                </div>
+                <div style="font-size: 10px; color: #666;">
+                    {{ module_stats.nazariy_modules }} modul
+                </div>
+                <!-- Progress bar -->
+                <div style="margin-top: 6px; background: #e0e0e0; border-radius: 2px; height: 4px; overflow: hidden;">
+                    <div style="background: #417690; height: 100%; width: {{ module_stats.nazariy_percent }}%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+            
+            <!-- Amaliy -->
+            <div style="flex: 1; min-width: 150px; padding: 12px; background: white; border-radius: 4px; border-left: 3px solid #79aec8; border: 1px solid #e0e0e0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-size: 13px; font-weight: bold; color: #79aec8;">🔧 Amaliy</div>
+                    <div style="background: #417690; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">
+                        {{ module_stats.amaliy_percent }}%
+                    </div>
+                </div>
+                <div style="font-size: 20px; font-weight: bold; color: #79aec8; margin-bottom: 4px;">
+                    {{ module_stats.amaliy_hours }}
+                </div>
+                <div style="font-size: 10px; color: #666;">
+                    {{ module_stats.amaliy_modules }} modul
+                </div>
+                <!-- Progress bar -->
+                <div style="margin-top: 6px; background: #e0e0e0; border-radius: 2px; height: 4px; overflow: hidden;">
+                    <div style="background: #79aec8; height: 100%; width: {{ module_stats.amaliy_percent }}%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}

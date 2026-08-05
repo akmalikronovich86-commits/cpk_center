@@ -1,189 +1,138 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
+
 from fpdf import FPDF
-import tempfile
 import os
-import qrcode
-import io
 from .models import Certificate
 
 
 class CertificatePDF(FPDF):
-    def __init__(self, logo_path=None):
+    def __init__(self):
         super().__init__('L', 'mm', 'A4')
-        self.font_name = 'Helvetica'
-        self.logo_path = logo_path
+        # Добавляем шрифт с поддержкой юникода
+        font_paths = [
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+            '/usr/share/fonts/dejavu/DejaVuSans.ttf',
+            '/usr/share/fonts/TTF/DejaVuSans.ttf',
+        ]
+        
+        font_path = None
+        for path in font_paths:
+            if os.path.exists(path):
+                font_path = path
+                break
+        
+        if font_path:
+            self.add_font('DejaVu', '', font_path, uni=True)
+            self.add_font('DejaVu', 'B', font_path.replace('.ttf', '-Bold.ttf'), uni=True)
+            self.add_font('DejaVu', 'I', font_path.replace('.ttf', '-Oblique.ttf'), uni=True)
+            self.font_name = 'DejaVu'
+        else:
+            self.font_name = 'Helvetica'
 
 
 def generate_certificate_pdf(request, certificate_id):
     """Генерация PDF сертификата"""
     certificate = get_object_or_404(Certificate, id=certificate_id)
     
-    # Генерируем QR-код
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=2,
-    )
-    
-    verify_url = request.build_absolute_uri(f'/certificates/verify/{certificate.qr_code}/')
-    qr.add_data(verify_url)
-    qr.make(fit=True)
-    
-    qr_img = qr.make_image(fill_color="black", back_color="white")
-    
-    qr_buffer = io.BytesIO()
-    qr_img.save(qr_buffer, format='PNG')
-    qr_buffer.seek(0)
-    
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as qr_tmp:
-        qr_tmp.write(qr_buffer.read())
-        qr_path = qr_tmp.name
-    
-    # Создаем PDF
     pdf = CertificatePDF()
     pdf.add_page()
     pdf.set_auto_page_break(False)
+    
     fn = pdf.font_name
     
-    # Рамки
+    # Рамка
     pdf.set_draw_color(30, 58, 95)
-    pdf.set_line_width(3)
-    pdf.rect(8, 8, 281, 194)
+    pdf.set_line_width(2)
+    pdf.rect(10, 10, 277, 190)
     
-    pdf.set_draw_color(180, 150, 70)
-    pdf.set_line_width(0.8)
-    pdf.rect(13, 13, 271, 184)
-    
-    # Логотип (слева вверху)
-    if pdf.logo_path and os.path.exists(pdf.logo_path):
-        try:
-            pdf.image(pdf.logo_path, x=20, y=20, w=30)
-        except Exception:
-            pass  # Если логотип не загрузился, продолжаем без него
-    
-    # Декоративная линия
-    pdf.set_draw_color(180, 150, 70)
+    # Внутренняя рамка
+    pdf.set_draw_color(201, 169, 97)
     pdf.set_line_width(0.5)
-    pdf.line(80, 42, 217, 42)
+    pdf.rect(15, 15, 267, 180)
     
     # Заголовок организации
-    pdf.set_font(fn, 'B', 11)
+    pdf.set_font(fn, 'B', 14)
     pdf.set_text_color(30, 58, 95)
-    pdf.set_y(22)
-    pdf.cell(0, 7, 'XODIMLAR MALAKASINI OSHIRISH VA', 0, 1, 'C')
-    pdf.cell(0, 7, 'QAYTA TAYYORLASH MARKAZI', 0, 1, 'C')
+    pdf.set_y(25)
+    pdf.cell(0, 10, 'XODIMLAR MALAKASINI OSHIRISH VA', 0, 1, 'C')
+    pdf.cell(0, 10, 'QAYTA TAYYORLASH MARKAZI', 0, 1, 'C')
+    pdf.ln(10)
     
-    # SERTIFIKAT
-    pdf.set_font(fn, 'B', 40)
+    # Заголовок СЕРТИФИКАТ
+    pdf.set_font(fn, 'B', 36)
     pdf.set_text_color(30, 58, 95)
-    pdf.set_y(48)
-    pdf.cell(0, 22, 'SERTIFIKAT', 0, 1, 'C')
-    
-    # Линия под SERTIFIKAT
-    pdf.set_draw_color(180, 150, 70)
-    pdf.set_line_width(0.5)
-    pdf.line(100, 72, 197, 72)
+    pdf.cell(0, 20, 'SERTIFIKAT', 0, 1, 'C')
+    pdf.ln(5)
     
     # Подзаголовок
-    pdf.set_font(fn, '', 12)
+    pdf.set_font(fn, '', 14)
     pdf.set_text_color(100, 100, 100)
-    pdf.set_y(75)
-    pdf.cell(0, 8, 'Malaka oshirishni tasdiqlaydi', 0, 1, 'C')
+    pdf.cell(0, 10, 'Malaka oshirishni tasdiqlaydi', 0, 1, 'C')
+    pdf.ln(10)
     
-    # "Bu sertifikat berilgan:"
-    pdf.set_font(fn, '', 11)
-    pdf.set_text_color(80, 80, 80)
-    pdf.set_y(90)
-    pdf.cell(0, 8, 'Bu sertifikat berilgan:', 0, 1, 'C')
+    # Текст "Bu sertifikat berilgan"
+    pdf.set_font(fn, '', 12)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 10, 'Bu sertifikat berilgan:', 0, 1, 'C')
+    pdf.ln(5)
     
     # Имя студента
-    pdf.set_font(fn, 'B', 24)
+    pdf.set_font(fn, 'B', 22)
     pdf.set_text_color(30, 58, 95)
-    pdf.set_y(100)
     student_name = certificate.student.full_name or "Noma'lum"
-    pdf.cell(0, 14, student_name, 0, 1, 'C')
-    
-    # Линия под именем
-    pdf.set_draw_color(180, 150, 70)
-    pdf.set_line_width(0.3)
-    pdf.line(60, 115, 237, 115)
+    pdf.cell(0, 15, student_name, 0, 1, 'C')
+    pdf.ln(5)
     
     # Информация о курсе
     pdf.set_font(fn, '', 12)
-    pdf.set_text_color(50, 50, 50)
-    pdf.set_y(120)
+    pdf.set_text_color(0, 0, 0)
     course_title = certificate.course.title
-    pdf.cell(0, 8, '"' + course_title + '"', 0, 1, 'C')
-    pdf.cell(0, 8, 'kursi boyicha malaka oshirganligini tasdiqlaydi', 0, 1, 'C')
+    pdf.cell(0, 10, f'"{course_title}" kursi bo\'yicha malaka oshirganligini tasdiqlaydi', 0, 1, 'C')
+    pdf.cell(0, 10, f'Dars soatlari: {certificate.course.duration_hours} soat', 0, 1, 'C')
+    pdf.ln(15)
+    
+    # Даты
     pdf.set_font(fn, '', 11)
-    pdf.set_text_color(80, 80, 80)
-    pdf.cell(0, 8, 'Dars soatlari: ' + str(certificate.course.duration_hours) + ' soat', 0, 1, 'C')
-    
-    # Нижняя часть
-    pdf.set_font(fn, '', 10)
-    pdf.set_text_color(60, 60, 60)
     issue_date = certificate.issue_date.strftime('%d.%m.%Y')
-    if certificate.expiry_date:
-        expiry_date = certificate.expiry_date.strftime('%d.%m.%Y')
-    else:
-        expiry_date = '5 yil'
+    expiry_date = certificate.expiry_date.strftime('%d.%m.%Y') if certificate.expiry_date else '5 yil'
     
-    # Даты слева
-    pdf.set_xy(25, 155)
-    pdf.cell(80, 7, 'Berilgan sana:', 0, 1, 'L')
-    pdf.set_font(fn, 'B', 11)
-    pdf.set_text_color(30, 58, 95)
-    pdf.set_xy(25, 162)
-    pdf.cell(80, 7, issue_date, 0, 1, 'L')
+    y_pos = pdf.get_y()
+    pdf.set_xy(20, y_pos)
+    pdf.cell(120, 10, f'Berilgan sana: {issue_date}', 0, 0, 'L')
+    pdf.cell(120, 10, f'Amal qilish muddati: {expiry_date}', 0, 1, 'R')
+    pdf.ln(20)
     
+    # Подпись
     pdf.set_font(fn, '', 10)
-    pdf.set_text_color(60, 60, 60)
-    pdf.set_xy(25, 172)
-    pdf.cell(80, 7, 'Amal qilish muddati:', 0, 1, 'L')
-    pdf.set_font(fn, 'B', 11)
-    pdf.set_text_color(30, 58, 95)
-    pdf.set_xy(25, 179)
-    pdf.cell(80, 7, expiry_date, 0, 1, 'L')
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(90, 5, '', 0, 0)
+    pdf.cell(90, 5, '_____________________', 0, 1, 'C')
+    pdf.cell(90, 5, '', 0, 0)
+    pdf.cell(90, 5, 'Markaz direktori', 0, 1, 'C')
     
-    # Подпись по центру
-    pdf.set_font(fn, '', 9)
-    pdf.set_text_color(80, 80, 80)
-    pdf.set_xy(110, 175)
-    pdf.cell(75, 6, '________________________', 0, 1, 'C')
-    pdf.set_xy(110, 181)
-    pdf.cell(75, 6, 'Markaz direktori', 0, 1, 'C')
-    
-    # QR-код справа
-    pdf.image(qr_path, x=245, y=150, w=28)
-    pdf.set_font(fn, '', 7)
-    pdf.set_text_color(120, 120, 120)
-    pdf.set_xy(240, 180)
-    pdf.cell(38, 4, 'Tekshirish uchun', 0, 1, 'C')
-    pdf.set_xy(240, 184)
-    pdf.cell(38, 4, 'skaner qiling', 0, 1, 'C')
-    
-    # Номер сертификата
-    pdf.set_font(fn, 'I', 8)
+    # Номер сертификата внизу
+    pdf.set_font(fn, 'I', 9)
     pdf.set_text_color(150, 150, 150)
-    pdf.set_xy(20, 193)
-    pdf.cell(257, 5, 'Sertifikat raqami: ' + str(certificate.certificate_number), 0, 0, 'C')
+    pdf.set_xy(20, 195)
+    pdf.cell(257, 5, f'Sertifikat raqami: {certificate.certificate_number}', 0, 0, 'R')
     
-    # Сохранение PDF
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
-        tmp_path = tmp.name
-        pdf.output(tmp_path)
+    # QR-код справа внизу (если есть)
+    if certificate.qr_image and os.path.exists(certificate.qr_image.path):
+        try:
+            pdf.image(certificate.qr_image.path, x=240, y=150, w=30)
+        except Exception as e:
+            pass
     
-    with open(tmp_path, 'rb') as f:
-        pdf_bytes = f.read()
+    # Вывод PDF
+    pdf_output = pdf.output(dest='S')
+    if isinstance(pdf_output, str):
+        pdf_output = pdf_output.encode('latin-1')
     
-    os.unlink(tmp_path)
-    os.unlink(qr_path)
-    
-    response = HttpResponse(pdf_bytes, content_type='application/pdf')
-    filename = 'certificate_' + str(certificate.certificate_number) + '.pdf'
-    response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
+    response = HttpResponse(pdf_output, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="certificate_{certificate.certificate_number}.pdf"'
     
     return response
 
@@ -198,3 +147,655 @@ def verify_certificate(request, qr_code):
     }
     
     return render(request, 'certificates/verify.html', context)
+
+
+def smart_redirect(request):
+
+    """Умный редирект после входа в зависимости от роли"""
+
+    if not request.user.is_authenticated:
+
+        return redirect('login')
+
+    
+
+    # Сначала проверяем конкретные роли
+
+    role_dashboards = {
+
+        'admin': '/admin/',
+
+        'director': 'certificates:director_dashboard',
+
+        'department_head': 'kpi:department_head_kpi_dashboard',
+
+        'methodist': 'certificates:methodist_dashboard',
+
+        'lecturer': 'certificates:lecturer_dashboard',
+
+        'student': 'certificates:student_dashboard',
+
+    }
+
+    
+
+    dashboard_url = role_dashboards.get(request.user.role)
+
+    
+
+    if dashboard_url:
+
+        return redirect(dashboard_url)
+
+    
+
+    # Если роль не определена, но пользователь суперпользователь — в админку
+
+    if request.user.is_superuser:
+
+        return redirect('/admin/')
+
+    
+
+    # По умолчанию — в кабинет студента
+
+    return redirect('certificates:student_dashboard')
+
+
+
+
+
+class CertificatePDF(FPDF):
+
+    def __init__(self, logo_path=None):
+
+        super().__init__('L', 'mm', 'A4')
+
+        self.font_name = 'Helvetica'
+
+        self.logo_path = logo_path
+
+
+
+
+
+
+def student_dashboard(request):
+    """Личный кабинет студента - сертификаты, расписание, уведомления"""
+
+    # Проверка роли
+    if request.user.role != 'student':
+        from django.contrib import messages
+        messages.warning(request, "Siz bu sahifaga kira olmaysiz. O'z shaxsiy kabinetingizga yo'naltirildingiz.")
+        if request.user.role == 'director':
+            return redirect('certificates:director_dashboard')
+        elif request.user.role == 'department_head':
+            return redirect('kpi:department_head_kpi_dashboard')
+        elif request.user.role == 'methodist':
+            return redirect('certificates:methodist_dashboard')
+        elif request.user.role == 'lecturer':
+            return redirect('lecturers:lecturer_dashboard')
+        return redirect('certificates:student_dashboard')
+    from .models import Certificate
+    from apps.groups.models import StudentRecord
+    from apps.courses.models import AcademicGroup
+    from apps.schedules.models import Schedule
+    from django.utils import timezone
+    
+    # Получаем StudentRecord связанного пользователя
+    try:
+        student_record = StudentRecord.objects.get(user=request.user)
+    except StudentRecord.DoesNotExist:
+        certificates = []
+        schedule_list = []
+        announcements = []
+    else:
+        # Сертификаты
+        certificates = Certificate.objects.filter(student=student_record).select_related('course').order_by('-issue_date')
+        
+        # Расписание - ищем по названию группы
+        schedule_list = []
+        if student_record.group:
+            # Находим AcademicGroup по имени
+            try:
+                academic_group = AcademicGroup.objects.get(name=student_record.group)
+                # Получаем расписание для этой группы
+                schedule_list = Schedule.objects.filter(
+                    group=academic_group,
+                    status='published',
+                    date_start__gte=timezone.now() - timezone.timedelta(days=1)
+                ).order_by('date_start')[:10]
+            except AcademicGroup.DoesNotExist:
+                pass
+        
+        # Уведомления
+        announcements = []  # Модель Announcement временно отключена
+    
+    # Статистика
+    active_count = sum(1 for c in certificates if c.status == 'issued')
+    revoked_count = sum(1 for c in certificates if c.status == 'revoked')
+    
+    context = {
+        'certificates': certificates,
+        'active_count': active_count,
+        'revoked_count': revoked_count,
+        'schedule_list': schedule_list,
+        'announcements': announcements,
+        'student_name': student_record.full_name if 'student_record' in locals() and student_record else request.user.get_full_name,
+    }
+    
+    return render(request, 'certificates/student_dashboard.html', context)
+
+
+@login_required
+
+
+def student_materials(request):
+    """Материалы для студента — только по его курсам"""
+    from apps.groups.models import StudentRecord
+    from apps.materials.models import Material
+    from .models import Certificate
+    
+    try:
+        student_record = StudentRecord.objects.get(user=request.user)
+        # Получаем курсы студента через его сертификаты
+        student_courses = Certificate.objects.filter(
+            student=student_record
+        ).values_list('course_id', flat=True).distinct()
+        
+        # Если есть курсы — фильтруем материалы по ним, иначе показываем все опубликованные
+        if student_courses.exists():
+            materials = Material.objects.filter(
+                course_id__in=student_courses,
+                is_published=True
+            ).select_related('course').order_by('course__code', 'order', '-uploaded_at')
+        else:
+            materials = Material.objects.filter(
+                is_published=True
+            ).select_related('course').order_by('course__code', 'order', '-uploaded_at')
+    except StudentRecord.DoesNotExist:
+        materials = Material.objects.filter(
+            is_published=True
+        ).select_related('course').order_by('course__code', 'order', '-uploaded_at')
+    
+    # Группируем материалы по курсу
+    materials_by_course = {}
+    for material in materials:
+        course_key = f"{material.course.code} - {material.course.title}"
+        if course_key not in materials_by_course:
+            materials_by_course[course_key] = []
+        materials_by_course[course_key].append(material)
+    
+    context = {
+        'materials_by_course': materials_by_course,
+        'total_count': materials.count(),
+    }
+    return render(request, 'certificates/student_materials.html', context)
+
+
+@login_required
+
+
+def student_zoom_recordings(request):
+    """Zoom-записи для студента — только по его курсам"""
+    from apps.groups.models import StudentRecord
+    from apps.zoom_integration.models import ZoomRecording, ZoomMeeting
+    from .models import Certificate
+    
+    try:
+        student_record = StudentRecord.objects.get(user=request.user)
+        student_courses = Certificate.objects.filter(
+            student=student_record
+        ).values_list('course_id', flat=True).distinct()
+        
+        if student_courses.exists():
+            recordings = ZoomRecording.objects.filter(
+                meeting__course_id__in=student_courses,
+                meeting__status='completed'
+            ).select_related('meeting', 'meeting__course', 'meeting__teacher').order_by('-meeting__start_time')
+        else:
+            recordings = ZoomRecording.objects.filter(
+                meeting__status='completed'
+            ).select_related('meeting', 'meeting__course', 'meeting__teacher').order_by('-meeting__start_time')
+    except StudentRecord.DoesNotExist:
+        recordings = ZoomRecording.objects.filter(
+            meeting__status='completed'
+        ).select_related('meeting', 'meeting__course', 'meeting__teacher').order_by('-meeting__start_time')
+    
+    context = {
+        'recordings': recordings,
+        'total_count': recordings.count(),
+    }
+    return render(request, 'certificates/student_zoom.html', context)
+
+
+@login_required
+
+
+def change_password(request):
+    """Изменение пароля студентом"""
+    from django.contrib.auth.forms import PasswordChangeForm
+    from django.contrib import messages
+    
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Важно: не разлогинивать
+            messages.success(request, 'Parol muvaffaqiyatli o\'zgartirildi!')
+            return redirect('certificates:student_dashboard')
+        else:
+            messages.error(request, 'Xatolik. Qaytadan urinib ko\'ring.')
+    else:
+        form = PasswordChangeForm(request.user)
+    
+    return render(request, 'certificates/change_password.html', {'form': form})
+
+
+@login_required
+
+
+def director_dashboard(request):
+    """Личный кабинет Директора - мониторинг работы Центра"""
+
+    # Проверка роли
+    if request.user.role != 'director':
+        from django.contrib import messages
+        messages.warning(request, "Siz bu sahifaga kira olmaysiz. O'z shaxsiy kabinetingizga yo'naltirildingiz.")
+        if request.user.role == 'department_head':
+            return redirect('kpi:department_head_kpi_dashboard')
+        elif request.user.role == 'methodist':
+            return redirect('certificates:methodist_dashboard')
+        elif request.user.role == 'lecturer':
+            return redirect('lecturers:lecturer_dashboard')
+        return redirect('certificates:student_dashboard')
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Avg, Count, Q
+    from apps.users.models import User
+    from apps.groups.models import StudentRecord
+    from apps.courses.models import Course, Enrollment
+    from apps.certificates.models import Certificate
+    from apps.schedules.models import Schedule, Attendance
+    from apps.zoom_integration.models import ZoomMeeting
+    from apps.materials.models import Material
+    
+    today = timezone.now().date()
+    now = timezone.now()
+    month_start = today.replace(day=1)
+    year_start = today.replace(month=1, day=1)
+    
+    # ===== KPI МЕТРИКИ =====
+    total_students = StudentRecord.objects.count()
+    active_students = User.objects.filter(role='student', is_active=True).count()
+    active_courses = Course.objects.count()
+    total_lecturers = User.objects.filter(role='lecturer', is_active=True).count()
+    
+    # Сертификаты
+    total_certificates = Certificate.objects.count()
+    try:
+        certs_this_month = Certificate.objects.filter(created_at__gte=month_start).count()
+    except Exception:
+        certs_this_month = 0
+    try:
+        certs_this_year = Certificate.objects.filter(created_at__year=today.year).count()
+    except Exception:
+        certs_this_year = 0
+    
+    # ===== ТРЕБУЕТ ВНИМАНИЯ =====
+    alerts = []
+    
+    # Занятия на сегодня
+    today_schedules = Schedule.objects.filter(date=today).count() if hasattr(Schedule, 'date') else 0
+    
+    # Ближайшие Zoom встречи
+    upcoming_zoom = ZoomMeeting.objects.filter(
+        start_time__gte=now,
+        start_time__lte=now + timedelta(hours=24),
+        status='scheduled'
+    ).count()
+    
+    # Опубликованные материалы
+    published_materials = Material.objects.filter(is_published=True).count()
+    unpublished_materials = Material.objects.filter(is_published=False).count()
+    
+    if unpublished_materials > 5:
+        alerts.append({
+            'type': 'warning',
+            'icon': '📚',
+            'title': 'Nashr etilmagan materiallar',
+            'message': f'{unpublished_materials} ta material nashrni kutmoqda',
+        })
+    
+    if today_schedules == 0:
+        alerts.append({
+            'type': 'info',
+            'icon': '📅',
+            'title': 'Bugun darslar yo\'q',
+            'message': 'Jadvalni tekshiring',
+        })
+    
+    # ===== АКТИВНЫЕ КУРСЫ =====
+    courses = Course.objects.all()[:10]
+    
+    # ===== ТОП ПРЕПОДАВАТЕЛЕЙ (по количеству материалов и встреч) =====
+    top_lecturers = User.objects.filter(
+        role='lecturer',
+        is_active=True
+    ).annotate(
+        materials_count=Count('uploaded_materials'),
+        meetings_count=Count('zoom_meetings')
+    ).order_by('-materials_count', '-meetings_count')[:5]
+    
+    # ===== БЛИЖАЙШИЕ ЗАНЯТИЯ =====
+    upcoming_schedules = ZoomMeeting.objects.filter(
+        start_time__gte=now,
+        status='scheduled'
+    ).select_related('course', 'teacher').order_by('start_time')[:5]
+    
+    # ===== ДИНАМИКА ПО МЕСЯЦАМ (сертификаты за последние 6 месяцев) =====
+    monthly_stats = []
+    for i in range(5, -1, -1):
+        month_date = today.replace(day=1) - timedelta(days=i*30)
+        month_start_dt = month_date.replace(day=1)
+        if month_date.month == 12:
+            month_end_dt = month_date.replace(year=month_date.year+1, month=1, day=1)
+        else:
+            month_end_dt = month_date.replace(month=month_date.month+1, day=1)
+        
+        try:
+            count = Certificate.objects.filter(
+                created_at__gte=month_start_dt,
+                created_at__lt=month_end_dt
+            ).count()
+            monthly_stats.append({
+                'month': month_date.strftime('%b'),
+                'count': count,
+            })
+        except:
+            monthly_stats.append({
+                'month': month_date.strftime('%b'),
+                'count': 0,
+            })
+    
+    max_monthly = max([s['count'] for s in monthly_stats]) if monthly_stats else 1
+    
+    context = {
+        # KPI
+        'total_students': total_students,
+        'active_students': active_students,
+        'active_courses': active_courses,
+        'total_lecturers': total_lecturers,
+        'total_certificates': total_certificates,
+        'certs_this_month': certs_this_month,
+        'certs_this_year': certs_this_year,
+        
+        # Данные
+        'alerts': alerts,
+        'courses': courses,
+        'top_lecturers': top_lecturers,
+        'upcoming_schedules': upcoming_schedules,
+        'monthly_stats': monthly_stats,
+        'max_monthly': max_monthly or 1,
+        
+        # Дополнительно
+        'today_schedules': today_schedules,
+        'upcoming_zoom': upcoming_zoom,
+        'published_materials': published_materials,
+        'today': today,
+        'now': now,
+    }
+    return render(request, 'certificates/director_dashboard.html', context)
+
+
+
+@login_required
+
+
+def methodist_dashboard(request):
+    """Личный кабинет Методиста - управление посещаемостью и оценками"""
+
+    # Проверка роли
+    if request.user.role != 'methodist':
+        from django.contrib import messages
+        messages.warning(request, "Siz bu sahifaga kira olmaysiz. O'z shaxsiy kabinetingizga yo'naltirildingiz.")
+        if request.user.role == 'director':
+            return redirect('certificates:director_dashboard')
+        elif request.user.role == 'department_head':
+            return redirect('kpi:department_head_kpi_dashboard')
+        elif request.user.role == 'lecturer':
+            return redirect('lecturers:lecturer_dashboard')
+        return redirect('certificates:student_dashboard')
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Count, Avg, Q
+    from apps.users.models import User
+    from apps.groups.models import StudentRecord
+    from apps.courses.models import Course, Enrollment
+    from apps.schedules.models import Schedule, Attendance
+    
+    today = timezone.now().date()
+    now = timezone.now()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    
+    # ===== KPI МЕТРИКИ =====
+    total_students = StudentRecord.objects.count()
+    active_students = User.objects.filter(role='student', is_active=True).count()
+    total_lecturers = User.objects.filter(role='lecturer', is_active=True).count()
+    total_courses = Course.objects.count()
+    total_enrollments = Enrollment.objects.count()
+    
+    # Расписание
+    total_schedules = Schedule.objects.count()
+    today_schedules = Schedule.objects.filter(
+        date_start__date=today
+    ).count()
+    
+    # Посещаемость
+    total_attendance = Attendance.objects.count()
+    present_count = Attendance.objects.filter(status='present').count()
+    absent_count = Attendance.objects.filter(status='absent').count()
+    late_count = Attendance.objects.filter(status='late').count()
+    attendance_rate = (present_count / total_attendance * 100) if total_attendance > 0 else 0
+    
+    # ===== АЛЕРТЫ =====
+    alerts = []
+    
+    # Занятия без отметки посещаемости
+    schedules_without_attendance = Schedule.objects.filter(
+        date_start__date=today,
+        status='published'
+    ).exclude(
+        id__in=Attendance.objects.values_list('schedule_id', flat=True)
+    ).count()
+    
+    if schedules_without_attendance > 0:
+        alerts.append({
+            'type': 'warning',
+            'icon': '⚠️',
+            'title': 'Davomat belgilanmagan',
+            'message': f'{schedules_without_attendance} ta dars uchun davomat belgilanmagan',
+        })
+    
+    # Низкая посещаемость
+    if attendance_rate < 70:
+        alerts.append({
+            'type': 'danger',
+            'icon': '📉',
+            'title': 'Past davomat',
+            'message': f'Davomat {attendance_rate:.1f}% - 70% dan past',
+        })
+    
+    # ===== БЛИЖАЙШИЕ ЗАНЯТИЯ =====
+    upcoming_schedules = Schedule.objects.filter(
+        date_start__gte=now
+    ).select_related('course', 'group', 'lecturer').order_by('date_start')[:10]
+    
+    # ===== ПОСЛЕДНЯЯ ПОСЕЩАЕМОСТЬ =====
+    recent_attendance = Attendance.objects.filter(
+        schedule__date_start__date__gte=today - timedelta(days=7)
+    ).select_related('student', 'schedule', 'schedule__course').order_by('-marked_at')[:20]
+    
+    # ===== СТАТИСТИКА ПО ГРУППАМ =====
+    group_stats = Enrollment.objects.filter(
+        is_active=True
+    ).values(
+        'group__name',
+        'group__course__title'
+    ).annotate(
+        student_count=Count('student')
+    ).order_by('-student_count')[:10]
+    
+    # ===== ТОП СТУДЕНТОВ ПО ПОСЕЩАЕМОСТИ =====
+    top_students = User.objects.filter(
+        role='student',
+        is_active=True,
+        attendances__isnull=False
+    ).annotate(
+        attendance_count=Count('attendances', filter=Q(attendances__status='present')),
+        total_attendance=Count('attendances')
+    ).order_by('-attendance_count')[:10]
+    
+    context = {
+        # KPI
+        'total_students': total_students,
+        'active_students': active_students,
+        'total_lecturers': total_lecturers,
+        'total_courses': total_courses,
+        'total_enrollments': total_enrollments,
+        'total_schedules': total_schedules,
+        'today_schedules': today_schedules,
+        'total_attendance': total_attendance,
+        'present_count': present_count,
+        'absent_count': absent_count,
+        'late_count': late_count,
+        'attendance_rate': round(attendance_rate, 1),
+        
+        # Данные
+        'alerts': alerts,
+        'upcoming_schedules': upcoming_schedules,
+        'recent_attendance': recent_attendance,
+        'group_stats': group_stats,
+        'top_students': top_students,
+        'schedules_without_attendance': schedules_without_attendance,
+        
+        # Дополнительно
+        'today': today,
+        'week_start': week_start,
+        'week_end': week_end,
+    }
+    return render(request, 'certificates/methodist_dashboard.html', context)
+
+
+@login_required
+
+
+def lecturer_dashboard(request):
+    """
+    Устаревшая view. Редирект на новый кабинет ma'ruzachi
+    """
+
+    # Проверка роли
+    if request.user.role != 'lecturer':
+        from django.contrib import messages
+        messages.warning(request, "Siz bu sahifaga kira olmaysiz. O'z shaxsiy kabinetingizga yo'naltirildingiz.")
+        if request.user.role == 'director':
+            return redirect('certificates:director_dashboard')
+        elif request.user.role == 'department_head':
+            return redirect('kpi:department_head_kpi_dashboard')
+        elif request.user.role == 'methodist':
+            return redirect('certificates:methodist_dashboard')
+        return redirect('certificates:student_dashboard')
+    return redirect('lecturers:lecturer_dashboard')
+
+
+
+
+@login_required
+
+
+def student_schedule(request):
+    """Расписание занятий студента с материалами и прогрессом"""
+    from apps.groups.models import StudentRecord
+    from apps.courses.models import AcademicGroup
+    from apps.schedules.models import Schedule, Attendance
+    from apps.materials.models import Material
+    from django.utils import timezone
+    
+    schedule_list = []
+    student_group_name = None
+    course_progress = {}
+    
+    try:
+        student_record = StudentRecord.objects.get(user=request.user)
+        student_group_name = student_record.group
+        
+        if student_record.group:
+            try:
+                academic_group = AcademicGroup.objects.get(name=student_record.group)
+                schedule_list = Schedule.objects.filter(
+                    group=academic_group,
+                    status='published'
+                ).order_by('date_start')
+                
+                # Для каждого расписания добавляем материалы и посещаемость
+                for schedule in schedule_list:
+                    # Материалы по курсу
+                    schedule.materials = Material.objects.filter(
+                        course=schedule.course,
+                        is_published=True
+                    ).order_by('-uploaded_at')[:5]
+                    
+                    # Посещаемость студента
+                    attendance = Attendance.objects.filter(
+                        schedule=schedule,
+                        student=request.user
+                    ).first()
+                    schedule.attendance_status = attendance.get_status_display() if attendance else 'Belgilanmagan'
+                
+                # Прогресс по курсам
+                courses = schedule_list.values_list('course', flat=True).distinct()
+                for course_id in courses:
+                    total_schedule = schedule_list.filter(course_id=course_id).count()
+                    attended = Attendance.objects.filter(
+                        schedule__course_id=course_id,
+                        student=request.user,
+                        status='present'
+                    ).count()
+                    progress = (attended / total_schedule * 100) if total_schedule > 0 else 0
+                    course_progress[course_id] = {
+                        'total': total_schedule,
+                        'attended': attended,
+                        'progress': round(progress, 1)
+                    }
+                    
+            except AcademicGroup.DoesNotExist:
+                pass
+    except StudentRecord.DoesNotExist:
+        pass
+    
+    context = {
+        'schedule_list': schedule_list,
+        'student_group_name': student_group_name,
+        'course_progress': course_progress,
+    }
+    
+    return render(request, 'certificates/student_schedule.html', context)
+
+
+@login_required
+
+
+def student_announcements(request):
+    """Уведомления/объявления для студента"""
+    from .models import Announcement
+    
+    announcements = Announcement.objects.filter(is_active=True).order_by('-created_at')
+    
+    context = {
+        'announcements': announcements,
+        'student_name': student_record.full_name if 'student_record' in locals() and student_record else request.user.get_full_name,
+    }
+    
+    return render(request, 'certificates/student_announcements.html', context)

@@ -1,0 +1,171 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .import-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .import-container h1 {
+        color: #417690;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #417690;
+        padding-bottom: 10px;
+    }
+    .import-form {
+        margin: 20px 0;
+        padding: 20px;
+        background: #f8f8f8;
+        border-radius: 5px;
+    }
+    .import-form label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #333;
+    }
+    .import-form input[type="file"] {
+        margin: 10px 0;
+        padding: 10px;
+        border: 2px dashed #417690;
+        background: #fff;
+        width: 100%;
+        cursor: pointer;
+    }
+    .import-form button {
+        background: #417690;
+        color: white;
+        padding: 10px 30px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+    .import-form button:hover {
+        background: #205067;
+    }
+    .info-box {
+        background: #e7f3ff;
+        border-left: 4px solid #2196F3;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+    }
+    .info-box h3 {
+        color: #2196F3;
+        margin-top: 0;
+    }
+    .column-list {
+        background: #fff;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 10px 0;
+    }
+    .column-list ol {
+        margin: 0;
+        padding-left: 20px;
+    }
+    .column-list li {
+        padding: 5px 0;
+        color: #555;
+    }
+    .warning-box {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+    }
+    .success-box {
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+    }
+    .error-box {
+        background: #f8d7da;
+        border-left: 4px solid #dc3545;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+    }
+    .back-link {
+        display: inline-block;
+        margin-top: 20px;
+        color: #417690;
+        text-decoration: none;
+    }
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="import-container">
+    <h1>Excel fayldan Tinglovchilarni import qilish</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="{% if message.tags == 'success' %}success-box{% elif message.tags == 'error' %}error-box{% else %}info-box{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="info-box">
+        <h3>Faylga qo'yiladigan talablar:</h3>
+        <p>Excel fayl (.xlsx) quyidagi ustunlarga ega bo'lishi kerak:</p>
+        <div class="column-list">
+            <ol>
+                <li><strong>T/R</strong> - Tartib raqami</li>
+                <li><strong>XTM</strong> - XTM kodi</li>
+                <li><strong>Malaka oshiruvchilar</strong> - F.I.Sh. (to'liq ism)</li>
+                <li><strong>Lavozimi</strong> - Egallab turgan lavozimi</li>
+                <li><strong>Pasport</strong> - Pasport seriya va raqami</li>
+                <li><strong>Tug'ilgan sana</strong> - Tug'ilgan sanasi</li>
+                <li><strong>Guruhi</strong> - O'quv guruhi (masalan: 26-01 guruh)</li>
+                <li><strong>Hududiy filiali nomi</strong> - Hududiy filial</li>
+                <li><strong>Tuman elektr ta'minoti</strong> - Tuman E'T</li>
+                <li><strong>Telefon raqami</strong> - Aloqa raqami</li>
+                <li><strong>Yakuniy bahosi</strong> - Yakuniy baho</li>
+                <li><strong>Mustaqil ta'lim mavzusi</strong> - Mavzu nomi</li>
+                <li><strong>Malaka oshirish muddati</strong> - Davr (masalan: 05.01-16.01.2026)</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="warning-box">
+        <h3>Muhim eslatma:</h3>
+        <ul>
+            <li>Fayl <strong>.xlsx</strong> formatida bo'lishi kerak</li>
+            <li>Birinchi qator - sarlavhalar (ustun nomlari)</li>
+            <li>Ikkinchi qatordan boshlab - ma'lumotlar</li>
+            <li>Bo'sh qatorlar avtomatik o'tkazib yuboriladi</li>
+            <li>Agar F.I.Sh. mavjud bo'lsa, yangilash amalga oshiriladi (takrorlanmaydi)</li>
+        </ul>
+    </div>
+
+    <div class="import-form">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="excel_file">Excel faylni tanlang:</label>
+            <input type="file" name="excel_file" id="excel_file" accept=".xlsx,.xls" required>
+            <br>
+            <button type="submit">Import qilish</button>
+        </form>
+    </div>
+
+    <a href="{% url 'admin:users_studentprofile_changelist' %}" class="back-link">
+        ← Tinglovchilar ro'yxatiga qaytish
+    </a>
+</div>
+{% endblock %}

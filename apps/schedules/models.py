@@ -5,7 +5,7 @@ from apps.users.models import User
 
 class Schedule(models.Model):
     STATUS_CHOICES = (
-        ('draft', 'Qoralama'),
+        ('draft', 'Tasdiqlanmagan'),
         ('published', "E'lon qilingan"),
         ('cancelled', 'Bekor qilingan'),
     )
@@ -91,6 +91,14 @@ class Schedule(models.Model):
             models.Index(fields=['lecturer', 'date_start']),
         ]
 
+    def get_duration(self):
+        """Возвращает продолжительность в часах"""
+        if self.date_start and self.date_end:
+            delta = self.date_end - self.date_start
+            hours = delta.total_seconds() / 3600
+            return f"{hours:.1f}"
+        return "0"
+
     def __str__(self):
         return f"{self.group.name} - {self.course.title} ({self.date_start.strftime('%d.%m.%Y %H:%M')})"
 
@@ -150,6 +158,14 @@ class Attendance(models.Model):
         verbose_name =  'Davomat '
         verbose_name_plural = 'Davomat'
         unique_together = ('schedule', 'student')
+
+    def get_duration(self):
+        """Возвращает продолжительность в часах"""
+        if self.date_start and self.date_end:
+            delta = self.date_end - self.date_start
+            hours = delta.total_seconds() / 3600
+            return f"{hours:.1f}"
+        return "0"
 
     def __str__(self):
         return f"{self.student.get_full_name()} - {self.schedule} - {self.get_status_display()}"

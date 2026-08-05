@@ -1,0 +1,33 @@
+{% extends "admin/change_list.html" %}
+
+{% block result_list %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('📋 Добавляем столбец T/R...');
+        
+        // Добавляем заголовок T/R
+        var thead = document.querySelector('#result_list thead tr');
+        if (thead) {
+            var th = document.createElement('th');
+            th.scope = 'col';
+            th.textContent = 'T/R';
+            th.style.cssText = 'width: 50px; text-align: center;';
+            thead.insertBefore(th, thead.firstChild);
+        }
+        
+        // Добавляем порядковые номера в строки
+        var tbody = document.querySelector('#result_list tbody');
+        if (tbody) {
+            var rows = tbody.querySelectorAll('tr');
+            rows.forEach(function(row, index) {
+                var td = document.createElement('td');
+                td.textContent = index + 1;
+                td.style.cssText = 'text-align: center; color: #666; font-weight: 500;';
+                row.insertBefore(td, row.firstChild);
+            });
+            console.log('✅ T/R добавлен:', rows.length, 'строк');
+        }
+    });
+    </script>
+    {{ block.super }}
+{% endblock %}

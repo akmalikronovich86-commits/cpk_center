@@ -43,6 +43,7 @@ class StudentRecord(models.Model):
     branch = models.CharField(max_length=200, blank=True, null=True, verbose_name="Hududiy filial nomi")
     district_power = models.CharField(max_length=200, blank=True, null=True, verbose_name="Tuman elektr ta'minoti")
     phone = models.CharField(max_length=50, blank=True, null=True, verbose_name="Telefon raqami")
+    email = models.EmailField(max_length=254, blank=True, null=True, verbose_name="Email")
     grade = models.CharField(max_length=50, blank=True, null=True, verbose_name="Yakuniy bahosi")
     topic = models.TextField(blank=True, null=True, verbose_name="Mustaqil ta'lim mavzusi")
     period = models.CharField(max_length=100, blank=True, null=True, verbose_name="Malaka oshirish muddati")

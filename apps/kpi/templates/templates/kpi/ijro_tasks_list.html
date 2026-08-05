@@ -1,0 +1,248 @@
+{% extends "certificates/base_student.html" %}
+
+{% block title %}Ijro.gov.uz topshiriqlari{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        color: white;
+        padding: 30px 40px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .page-header h2 {
+        font-size: 28px;
+        margin: 0;
+    }
+    .add-btn {
+        background: linear-gradient(135deg, #48bb78, #38a169);
+        color: white;
+        padding: 12px 25px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+    }
+    .add-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(72, 187, 120, 0.4);
+    }
+    
+    .filters {
+        background: white;
+        padding: 20px 30px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    .filter-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-right: 20px;
+    }
+    .filter-group label {
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 14px;
+    }
+    .filter-select {
+        padding: 8px 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    
+    .task-list {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    .task-item {
+        padding: 20px;
+        background: #f7fafc;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        border-left: 4px solid #cbd5e0;
+        transition: all 0.3s;
+    }
+    .task-item:hover {
+        background: #edf2f7;
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .task-item.new { border-left-color: #4299e1; }
+    .task-item.in_progress { border-left-color: #ed8936; }
+    .task-item.completed { border-left-color: #48bb78; }
+    .task-item.overdue { border-left-color: #f56565; }
+    
+    .task-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+    .task-number {
+        font-size: 12px;
+        color: #718096;
+        font-weight: 600;
+    }
+    .task-status {
+        padding: 5px 14px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .task-status.new { background: #ebf8ff; color: #2c5282; }
+    .task-status.in_progress { background: #fffaf0; color: #7b341e; }
+    .task-status.completed { background: #f0fff4; color: #22543d; }
+    .task-status.overdue { background: #fff5f5; color: #742a2a; }
+    
+    .task-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 10px;
+    }
+    .task-description {
+        font-size: 14px;
+        color: #4a5568;
+        margin-bottom: 12px;
+        line-height: 1.6;
+    }
+    .task-meta {
+        display: flex;
+        gap: 25px;
+        font-size: 13px;
+        color: #718096;
+        flex-wrap: wrap;
+    }
+    .task-meta span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .task-deadline.overdue {
+        color: #e53e3e;
+        font-weight: 600;
+    }
+    .task-actions {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .task-actions a {
+        color: #3182ce;
+        font-size: 13px;
+        text-decoration: none;
+        margin-right: 15px;
+    }
+    .task-actions a:hover {
+        text-decoration: underline;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #a0aec0;
+    }
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'kpi:department_head_kpi_dashboard' %}" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #edf2f7, #e2e8f0); color: #4a5568; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: all 0.3s;">
+        ← Orqaga
+    </a>
+</div>
+
+<div class="page-header">
+    <h2>📋 Ijro.gov.uz topshiriqlari</h2>
+    <a href="{% url 'kpi:ijro_task_create' %}" class="add-btn">
+        ➕ Yangi topshiriq
+    </a>
+</div>
+
+<!-- Фильтры -->
+<div class="filters">
+    <form method="get" action="{% url 'kpi:ijro_tasks_list' %}">
+        <div class="filter-group">
+            <label for="status-filter">Holat:</label>
+            <select name="status" id="status-filter" class="filter-select" onchange="this.form.submit()">
+                <option value="">Barchasi</option>
+                {% for value, label in statuses %}
+                <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+<!-- Список задач -->
+<div class="task-list">
+    {% if tasks %}
+        {% for task in tasks %}
+        <div class="task-item {{ task.status }}">
+            <div class="task-header">
+                <span class="task-number">{{ task.task_number }}</span>
+                <span class="task-status {{ task.status }}">
+                    {% if task.status == 'new' %}🆕 Yangi
+                    {% elif task.status == 'in_progress' %}🔄 Jarayonda
+                    {% elif task.status == 'completed' %}✅ Bajarildi
+                    {% else %}⚠️ Kechikkan{% endif %}
+                </span>
+            </div>
+            <div class="task-title">{{ task.title }}</div>
+            {% if task.description %}
+            <div class="task-description">{{ task.description|truncatewords:30 }}</div>
+            {% endif %}
+            <div class="task-meta">
+                <span>📅 {{ task.deadline|date:"d.m.Y" }}</span>
+                <span>👤 {{ task.assigned_by }}</span>
+                <span>📆 {{ task.created_at|date:"d.m.Y" }}</span>
+                {% if task.completed_at %}
+                <span>✅ {{ task.completed_at|date:"d.m.Y H:i" }}</span>
+                {% endif %}
+            </div>
+            {% if task.result %}
+            <div style="margin-top: 12px; padding: 12px; background: white; border-radius: 6px; font-size: 14px; color: #4a5568;">
+                <strong>Natija:</strong> {{ task.result|truncatewords:20 }}
+            </div>
+            {% endif %}
+            <div class="task-actions">
+                <a href="{% url 'kpi:ijro_task_update' task.id %}">✏️ Tahrirlash</a>
+                <form method="post" action="{% url 'kpi:ijro_task_delete' task.id %}" style="display: inline;" onsubmit="return confirm('Haqiqatan ham bu topshiriqni o'chirmoqchimisiz?');">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; color: #e53e3e; cursor: pointer; font-size: 13px;">🗑️ O'chirish</button>
+                </form>
+                
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <h3>Topshiriqlar yo'q</h3>
+            <p>Hozircha hech qanday topshiriqlar mavjud emas</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

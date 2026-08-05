@@ -1,3 +1,4 @@
+from datetime import timedelta, datetime
 from django.contrib import admin, messages
 from django.db import models
 from import_export.admin import ImportExportModelAdmin
@@ -6,6 +7,10 @@ from import_export.formats.base_formats import XLSX
 from django.db.models import Window, F
 from django.db.models.functions import RowNumber
 from .models import TrainingYear, StudentRecord
+from apps.certificates.models import Certificate
+from apps.courses.models import Course
+from django.utils import timezone
+import secrets
 
 
 class StudentRecordResource(resources.ModelResource):
@@ -78,7 +83,78 @@ class StudentRecordAdmin(ImportExportModelAdmin):
     tartib_raqami.short_description = "T/r"
     tartib_raqami.admin_order_field = 'id'
 
-    list_display = ('user_link', 'tartib_raqami', 'full_name', 'passport', 'phone', 'group', 'branch', 'training_year')
+    list_display = ('user_link', 'tartib_raqami', 'full_name', 'passport', 'phone', 'email', 'group', 'branch', 'training_year')
+    list_editable = ('group', 'phone', 'email')
+    search_fields = ('full_name', 'passport', 'phone', 'email', 'user__username')
+    list_filter = ('group', 'training_year', 'branch')
+    list_per_page = 25
+    
+    actions = ['generate_certificates_for_selected', 'delete_students_with_users']
+    
+    def generate_certificates_for_selected(self, request, queryset):
+        """Массовая генерация сертификатов для выбранных студентов"""
+        from datetime import date, timedelta
+        import secrets
+        
+        # Получаем первый доступный курс
+        course = Course.objects.first()
+        if not course:
+            self.message_user(request, "Kurs mavjud emas!", messages.ERROR)
+            return
+        
+        # Получаем последний номер сертификата
+        last_cert = Certificate.objects.order_by('-id').first()
+        next_number = 1
+        if last_cert and last_cert.certificate_number:
+            try:
+                last_num = int(last_cert.certificate_number.split('-')[-1])
+                next_number = last_num + 1
+            except:
+                pass
+        
+        created_count = 0
+        today = date.today()
+        expiry = today + timedelta(days=1825)  # 5 лет
+        
+        for student in queryset:
+            # Проверяем, есть ли уже сертификат
+            exists = Certificate.objects.filter(student=student, course=course).exists()
+            if exists:
+                continue
+            
+            # Генерируем номер сертификата
+            cert_number = f'CERT-{today.year}-{str(next_number).zfill(5)}'
+            next_number += 1
+            
+            # Генерируем QR-код
+            qr_code = f'CPK-{cert_number}-{secrets.token_hex(4)}'
+            
+            # Создаём сертификат
+            Certificate.objects.create(
+                student=student,
+                course=course,
+                certificate_number=cert_number,
+                issue_date=today,
+                expiry_date=expiry,
+                qr_code=qr_code,
+                status='issued',
+                series='AA',
+                created_by=request.user if request.user.is_authenticated else None
+            )
+            created_count += 1
+        
+        self.message_user(request, f"{created_count} ta sertifikat yaratildi", messages.SUCCESS)
+    
+    generate_certificates_for_selected.short_description = "Tanlangan talabalar uchun sertifikat yaratish"
+
+    @admin.action(description='️ Удалить выбранных студентов и их аккаунты')
+    def delete_students_with_users(self, request, queryset):
+        count = queryset.count()
+        queryset.delete()
+        self.message_user(request, f'✅ Успешно удалено {count} студентов вместе с их аккаунтами.', messages.SUCCESS)
+
+
+
 
     def user_link(self, obj):
         if obj.user:

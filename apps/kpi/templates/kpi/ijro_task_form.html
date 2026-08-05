@@ -1,0 +1,323 @@
+{% extends "certificates/base_student.html" %}
+
+{% block title %}{{ title }}
+
+
+
+
+{% endblock %}
+
+{% block extra_css %}
+
+
+
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    .form-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #edf2f7;
+    }
+    .form-header h2 {
+        color: #1e3a5f;
+        font-size: 24px;
+        margin: 0;
+    }
+    .form-group {
+        margin-bottom: 25px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 14px;
+    }
+    .form-group label span {
+        color: #e53e3e;
+    }
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: all 0.3s;
+        font-family: inherit;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: flex-end;
+        margin-top: 30px;
+        padding-top: 25px;
+        border-top: 2px solid #edf2f7;
+    }
+    .btn {
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 15px;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+    .btn-secondary {
+        background: #edf2f7;
+        color: #4a5568;
+    }
+    .btn-secondary:hover {
+        background: #e2e8f0;
+    }
+    .help-text {
+        font-size: 13px;
+        color: #718096;
+        margin-top: 6px;
+    }
+
+    /* Кастомные кнопки выбора файла */
+    input[type="file"].form-control-file {
+        position: absolute;
+        width: 0.1px;
+        height: 0.1px;
+        opacity: 0;
+        overflow: hidden;
+        z-index: 0;
+        pointer-events: auto;
+        cursor: pointer;
+    }
+    
+    /* Делаем label кликабельным */
+    label.custom-file-btn {
+        cursor: pointer;
+        user-select: none;
+        display: inline-block;
+    }
+    
+    .custom-file-btn {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: none;
+        font-size: 14px;
+    }
+    
+    .custom-file-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .custom-file-btn-purple {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+    
+    .custom-file-btn-green {
+        background: linear-gradient(135deg, #48bb78, #38a169);
+    }
+    
+    .file-name-display {
+        margin-left: 15px;
+        color: #718096;
+        font-size: 14px;
+    }
+    
+    .file-name-display.has-file {
+        color: #48bb78;
+        font-weight: 600;
+    }
+
+</style>
+
+
+{% endblock %}
+
+{% block content %}
+<a href="javascript:history.back()" style="display: inline-flex; align-items: center; gap: 8px; color: #4a5568; text-decoration: none; font-weight: 600; margin-bottom: 15px; padding: 8px 16px; background: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0; transition: all 0.2s;" onmouseover="this.style.background='#edf2f7'" onmouseout="this.style.background='#f7fafc'">️ Ortga</a>
+
+
+<div class="form-container">
+    <div class="form-header">
+        <h2>{{ title }}</h2>
+    </div>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.task_number.id_for_label }}">Topshiriq raqami <span>*</span></label>
+            {{ form.task_number }}
+            {% if form.task_number.help_text %}
+            <div class="help-text">{{ form.task_number.help_text }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">Nomi <span>*</span></label>
+            {{ form.title }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">Tavsif <span>*</span></label>
+            {{ form.description }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.assigned_by.id_for_label }}">Kim tomonidan <span>*</span></label>
+            {{ form.assigned_by }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.deadline.id_for_label }}">Muddati <span>*</span></label>
+            {{ form.deadline }}
+            <div class="help-text" style="margin-top: 5px; font-size: 12px; color: #a0aec0;">
+                📅 Masalan: 15.07.2026 (КК.ОЙ.ЙЙЙЙ)
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.status.id_for_label }}">Holat</label>
+            {{ form.status }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.result.id_for_label }}">Natija</label>
+            {{ form.result }}
+            <div class="help-text">Topshiriq bajarilgandan so'ng to'ldiriladi</div>
+        </div>
+        
+        
+                                <div class="form-group">
+            <label for="id_incoming_file" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">Kiruvchi hujjat fayli (Ijro.uz)</label>
+            <label for="id_incoming_file" class="custom-file-btn custom-file-btn-purple">📁 Faylni tanlang</label>
+            <span id="incoming_file_name" class="file-name-display">Fayl tanlanmagan</span>
+            {{ form.incoming_file }}
+            {% if form.instance.incoming_file %}
+            <div style="margin-top: 8px;">
+                <a href="{{ form.instance.incoming_file.url }}" target="_blank" style="color: #3182ce; text-decoration: underline; font-size: 14px;">
+                    📎 Hozirgi fayl: {{ form.instance.incoming_file.name|slice:"22:" }} (Yuklab olish)
+                </a>
+            </div>
+            {% endif %}
+            {% if form.incoming_file.errors %}
+            <div style="color: #e53e3e; font-size: 13px; margin-top: 5px;">{{ form.incoming_file.errors }}</div>
+            {% endif %}
+            <div class="help-text" style="margin-top: 6px; font-size: 13px; color: #718096;">Ruxsat etilgan formatlar: .pdf, .docx, .xlsx, .pptx</div>
+        </div>
+        </div>
+        
+                        <div class="form-group">
+            <label for="id_completed_file" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">Bajarilgan topshiriq fayli</label>
+            <label for="id_completed_file" class="custom-file-btn custom-file-btn-green">📁 Faylni tanlang</label>
+            <span id="completed_file_name" class="file-name-display">Fayl tanlanmagan</span>
+            {{ form.completed_file }}
+            {% if form.instance.completed_file %}
+            <div style="margin-top: 8px;">
+                <a href="{{ form.instance.completed_file.url }}" target="_blank" style="color: #3182ce; text-decoration: underline; font-size: 14px;">
+                    📎 Hozirgi fayl: {{ form.instance.completed_file.name|slice:"24:" }} (Yuklab olish)
+                </a>
+            </div>
+            {% endif %}
+            {% if form.completed_file.errors %}
+            <div style="color: #e53e3e; font-size: 13px; margin-top: 5px;">{{ form.completed_file.errors }}</div>
+            {% endif %}
+            <div class="help-text" style="margin-top: 6px; font-size: 13px; color: #718096;">Topshiriq bajarilgandan so'ng yuklanadi</div>
+        </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'kpi:ijro_tasks_list' %}" class="btn btn-secondary">
+                ← Bekor qilish
+            </a>
+            <button type="submit" class="btn btn-primary">
+                ✅ Saqlash
+            </button>
+        </div>
+    </form>
+</div>
+
+
+
+
+
+
+<script>
+function handleFileSelect(fieldName, inputElement) {
+    const span = document.getElementById(fieldName + '_name');
+    if (span && inputElement.files && inputElement.files[0]) {
+        span.textContent = inputElement.files[0].name;
+        span.style.color = '#48bb78';
+        span.style.fontWeight = '600';
+    } else if (span) {
+        span.textContent = 'Fayl tanlanmagan';
+        span.style.color = '#718096';
+        span.style.fontWeight = 'normal';
+    }
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var incomingInput = document.getElementById('id_incoming_file');
+    var incomingName = document.getElementById('incoming_file_name');
+    if (incomingInput && incomingName) {
+        incomingInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                incomingName.textContent = this.files[0].name;
+                incomingName.classList.add('has-file');
+            } else {
+                incomingName.textContent = 'Fayl tanlanmagan';
+                incomingName.classList.remove('has-file');
+            }
+        });
+    }
+    
+    var completedInput = document.getElementById('id_completed_file');
+    var completedName = document.getElementById('completed_file_name');
+    if (completedInput && completedName) {
+        completedInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                completedName.textContent = this.files[0].name;
+                completedName.classList.add('has-file');
+            } else {
+                completedName.textContent = 'Fayl tanlanmagan';
+                completedName.classList.remove('has-file');
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}
