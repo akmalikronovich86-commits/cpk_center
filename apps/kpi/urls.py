@@ -6,6 +6,7 @@ app_name = 'kpi'
 
 urlpatterns = [
     path('dashboard/', views.department_head_kpi_dashboard, name='department_head_kpi_dashboard'),
+    path('attestation-report/', views.attestation_kpi_report, name='attestation_kpi_report'),
     path('export/excel/', views.export_kpi_report_excel, name='export_kpi_excel'),
     path('ijro-tasks/', views.ijro_tasks_list, name='ijro_tasks_list'),
     path('ijro-tasks/create/', views.ijro_task_create, name='ijro_task_create'),
