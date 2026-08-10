@@ -1,0 +1,69 @@
+{% extends "assessments/base_assessments.html" %}
+
+{% block title %}Мои слушатели{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0"><i class="bi bi-people-fill"></i> Мои слушатели</h3>
+    <span class="text-muted">Порог посещаемости: {{ threshold }}%</span>
+</div>
+
+{% if not groups_data %}
+    <div class="alert alert-info">У вас пока нет групп с занятиями.</div>
+{% endif %}
+
+{% for item in groups_data %}
+<div class="card stat-card mb-4">
+    <div class="card-header bg-white fw-bold">
+        <i class="bi bi-collection"></i> {{ item.group.name }}
+        <span class="text-muted fw-normal">— {{ item.group.course.title }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Слушатель</th>
+                        <th class="text-center">Занятий</th>
+                        <th class="text-center">Зачтено</th>
+                        <th class="text-center">Посещаемость</th>
+                        <th class="text-center">Экзамен</th>
+                        <th class="text-center">Пересдача</th>
+                        <th class="text-center">Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in item.records %}
+                    <tr>
+                        <td>{{ r.student.get_full_name|default:r.student.username }}</td>
+                        <td class="text-center">{{ r.total_lessons }}</td>
+                        <td class="text-center">{{ r.counted_attendances }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if r.attendance_passed %}badge-soft-success{% else %}badge-soft-danger{% endif %}">
+                                {{ r.attendance_percentage }}%
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if r.exam_score is not None %}
+                                <span class="badge {% if r.exam_passed %}badge-soft-success{% else %}badge-soft-danger{% endif %}">{{ r.exam_score }}%</span>
+                            {% else %}<span class="text-muted">—</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if r.retake_score is not None %}
+                                <span class="badge {% if r.retake_passed %}badge-soft-success{% else %}badge-soft-danger{% endif %}">{{ r.retake_score }}%</span>
+                            {% elif r.retake_allowed %}
+                                <span class="badge badge-soft-warning">Назначена</span>
+                            {% else %}<span class="text-muted">—</span>{% endif %}
+                        </td>
+                        <td class="text-center"><small>{{ r.status_label }}</small></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-3">Нет слушателей в группе.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

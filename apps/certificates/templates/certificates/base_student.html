@@ -177,7 +177,32 @@ setTimeout(function() {
         </a>
     </div>
     {% endif %}
-    
+
+    {% if request.user.role == 'director' %}
+    <div class="tabs">
+        <a href="{% url 'certificates:director_dashboard' %}" class="tab {% if request.resolver_match.url_name == 'director_dashboard' and request.resolver_match.namespace == 'certificates' %}active{% endif %}">
+            📊 Boshqaruv paneli
+        </a>
+        <a href="{% url 'assessments:director_dashboard' %}" class="tab">
+            ✅ Attestatsiya va sertifikatlar
+        </a>
+    </div>
+    {% endif %}
+
+    {% if request.user.role == 'department_head' %}
+    <div class="tabs">
+        <a href="{% url 'kpi:department_head_kpi_dashboard' %}" class="tab">
+            📈 KPI
+        </a>
+        <a href="{% url 'kpi:attestation_kpi_report' %}" class="tab">
+            🧾 Attestatsiya hisoboti
+        </a>
+        <a href="{% url 'assessments:department_report' %}" class="tab">
+            📋 Guruhlar bo'yicha hisobot
+        </a>
+    </div>
+    {% endif %}
+
     <div class="container">
         {% block content %}{% endblock %}
     </div>

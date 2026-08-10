@@ -104,12 +104,28 @@ class ExamResult(models.Model):
         blank=True,
         verbose_name= 'Baholash sanasi'
     )
+    attempt_number = models.PositiveSmallIntegerField(
+        default=1,
+        verbose_name= 'Urinish raqami'
+    )
+    is_retake = models.BooleanField(
+        default=False,
+        verbose_name= 'Qayta topshirish'
+    )
+    approved_by_director = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='approved_retake_results',
+        verbose_name= 'Qayta topshirishni tasdiqlagan direktor'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name =  'Imtihon natijasi '
         verbose_name_plural = 'Imtihon natijalari'
-        unique_together = ('student', 'question')
+        unique_together = ('student', 'question', 'attempt_number')
 
     def __str__(self):
         return f"{self.student.get_full_name()} - {self.question} - {self.score_obtained}"
@@ -165,6 +181,14 @@ class TestSession(models.Model):
     passing_score_percentage = models.PositiveIntegerField(
         default=70,
         verbose_name= "O'tish foizi"
+    )
+    attempt_number = models.PositiveSmallIntegerField(
+        default=1,
+        verbose_name= 'Urinish raqami'
+    )
+    is_retake = models.BooleanField(
+        default=False,
+        verbose_name= 'Qayta topshirish sessiyasi'
     )
 
     class Meta:

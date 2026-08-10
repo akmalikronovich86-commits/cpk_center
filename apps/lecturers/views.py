@@ -19,6 +19,7 @@ PAGES_ORDER = [
     ('lecturers:lecturer_schedule', 'Dars jadvali', '📅'),
     ('lecturers:lecturer_courses', 'Kurslar', ''),
     ('lecturers:lecturer_students', 'Tinglovchilar', '👥'),
+    ('assessments:teacher_students', 'Attestatsiya', '✅'),
     ('lecturers:lecturer_materials', 'Materiallar', '📄'),
     ('lecturers:lecturer_zoom', 'Zoom uchrashuvlar', '📹'),
 ]
