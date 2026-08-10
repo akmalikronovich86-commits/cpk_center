@@ -80,6 +80,11 @@ class Schedule(models.Model):
         blank=True,
         verbose_name= 'Izohlar'
     )
+    duration_minutes = models.PositiveIntegerField(
+        default=90,
+        verbose_name= 'Dars davomiyligi (daqiqa)',
+        help_text='Davomatni hisoblash uchun darsning to\'liq davomiyligi (daqiqalarda).'
+    )
 
     class Meta:
         verbose_name =  'Dars '
@@ -106,6 +111,19 @@ class Schedule(models.Model):
     def duration_hours(self):
         delta = self.date_end - self.date_start
         return delta.total_seconds() / 3600
+
+    @property
+    def effective_duration_minutes(self):
+        """Darsning to'liq davomiyligi daqiqalarda.
+
+        Agar boshlanish/tugash vaqtlari kiritilgan bo'lsa, ular asosida
+        hisoblanadi, aks holda ``duration_minutes`` maydoni ishlatiladi.
+        """
+        if self.date_start and self.date_end:
+            minutes = (self.date_end - self.date_start).total_seconds() / 60
+            if minutes > 0:
+                return int(round(minutes))
+        return self.duration_minutes or 90
 
     def publish(self, user):
         self.status = 'published'
@@ -141,6 +159,12 @@ class Attendance(models.Model):
         default='absent',
         verbose_name= 'Holati'
     )
+    attended_minutes = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name= 'Qatnashgan daqiqalar',
+        help_text='Tinglovchi darsda necha daqiqa qatnashgani. Kechikishlarni hisobga olish uchun ishlatiladi.'
+    )
     notes = models.TextField(
         blank=True,
         verbose_name= 'Izohlar'
@@ -166,6 +190,37 @@ class Attendance(models.Model):
             hours = delta.total_seconds() / 3600
             return f"{hours:.1f}"
         return "0"
+
+    @property
+    def counted_value(self):
+        """Davomatning hisobga olinadigan qiymati (0, 0.5 yoki 1.0).
+
+        Biznes-mantiq:
+          * To'liq qatnashgan  -> 1.0
+          * Darsning 50% dan ko'prog'ida qatnashgan (kechikkan) -> 0.5
+          * Darsning 50% dan kamida qatnashgan -> 0.0
+        """
+        # Umuman kelmagan yoki uzrsiz sabab bilan yo'q
+        if self.status == 'absent':
+            return 0.0
+
+        full_minutes = self.schedule.effective_duration_minutes if self.schedule_id else 90
+
+        # Agar aniq daqiqalar kiritilgan bo'lsa — ular bo'yicha hisoblaymiz
+        if self.attended_minutes is not None and full_minutes:
+            ratio = self.attended_minutes / full_minutes
+            if ratio >= 0.999:
+                return 1.0
+            if ratio > 0.5:
+                return 0.5
+            return 0.0
+
+        # Aniq daqiqalar yo'q — status bo'yicha hisoblaymiz
+        if self.status in ('present', 'excused'):
+            return 1.0
+        if self.status == 'late':
+            return 0.5
+        return 0.0
 
     def __str__(self):
         return f"{self.student.get_full_name()} - {self.schedule} - {self.get_status_display()}"
