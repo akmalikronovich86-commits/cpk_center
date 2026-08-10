@@ -780,3 +780,112 @@ def lecturer_delete(request, lecturer_id):
         messages.success(request, "Ma'ruzachi o'chirildi!")
         return redirect('kpi:lecturer_list')
     return render(request, 'kpi/confirm_delete.html', {'object': lecturer, 'type': "Ma'ruzachi"})
+
+
+# ============================================================
+# KPI-ОТЧЁТ ПО АТТЕСТАЦИИ (для руководителя учебного отдела)
+# ============================================================
+@login_required
+def attestation_kpi_report(request):
+    """KPI-отчёт по аттестации слушателей для руководителя учебного отдела.
+
+    Показывает: группы в процессе обучения, среднюю посещаемость,
+    число прошедших/не прошедших аттестацию, выданные сертификаты за период,
+    а также сводку по преподавателям.
+    """
+    access_error = _check_management_access(request)
+    if access_error:
+        return access_error
+
+    from decimal import Decimal
+    from apps.courses.models import AcademicGroup
+    from apps.certificates.models import Certificate
+    from apps.assessments.models import AssessmentRecord
+    from apps.assessments import services as assessment_services
+
+    today = timezone.now().date()
+    period = request.GET.get('period', 'month')
+    if period == 'week':
+        period_start = today - timedelta(days=today.weekday())
+    elif period == 'quarter':
+        q_month = ((today.month - 1) // 3) * 3 + 1
+        period_start = today.replace(month=q_month, day=1)
+    elif period == 'year':
+        period_start = today.replace(month=1, day=1)
+    else:
+        period = 'month'
+        period_start = today.replace(day=1)
+
+    groups = AcademicGroup.objects.select_related('course').all()
+
+    # Пересчитываем записи аттестации по всем группам (актуализация данных)
+    for group in groups:
+        student_ids = Enrollment_student_ids(group)
+        for student in student_ids:
+            assessment_services.recalculate_record(student, group)
+
+    records = AssessmentRecord.objects.all()
+    total_records = records.count()
+    passed = records.filter(eligible_for_certificate=True).count()
+    not_passed = total_records - passed
+
+    # Средняя посещаемость по всем группам
+    if total_records:
+        avg_attendance = sum(float(r.attendance_percentage) for r in records) / total_records
+    else:
+        avg_attendance = 0
+
+    # Группы «в процессе обучения» (дата окончания не наступила)
+    groups_in_progress = groups.filter(end_date__gte=today).count()
+
+    # Сертификаты за период
+    try:
+        certs_in_period = Certificate.objects.filter(created_at__date__gte=period_start).count()
+    except Exception:
+        certs_in_period = Certificate.objects.filter(issue_date__gte=period_start).count()
+    total_certificates = Certificate.objects.count()
+
+    # Сводка по преподавателям
+    from apps.schedules.models import Schedule
+    lecturers_summary = []
+    lecturers = User.objects.filter(role='lecturer', is_active=True)
+    for lect in lecturers:
+        lect_group_ids = list(Schedule.objects.filter(
+            lecturer=lect
+        ).values_list('group_id', flat=True).distinct())
+        if not lect_group_ids:
+            continue
+        lect_records = records.filter(group_id__in=lect_group_ids)
+        cnt = lect_records.count()
+        if cnt:
+            lect_avg = sum(float(r.attendance_percentage) for r in lect_records) / cnt
+        else:
+            lect_avg = 0
+        lecturers_summary.append({
+            'lecturer': lect,
+            'groups_count': len(lect_group_ids),
+            'students_count': cnt,
+            'avg_attendance': round(lect_avg, 1),
+        })
+
+    context = {
+        'period': period,
+        'period_start': period_start,
+        'groups_in_progress': groups_in_progress,
+        'total_groups': groups.count(),
+        'avg_attendance': round(avg_attendance, 1),
+        'passed': passed,
+        'not_passed': not_passed,
+        'total_records': total_records,
+        'certs_in_period': certs_in_period,
+        'total_certificates': total_certificates,
+        'lecturers_summary': lecturers_summary,
+    }
+    return render(request, 'kpi/attestation_kpi_report.html', context)
+
+
+def Enrollment_student_ids(group):
+    """Возвращает список активных слушателей группы."""
+    from apps.courses.models import Enrollment
+    ids = Enrollment.objects.filter(group=group, is_active=True).values_list('student_id', flat=True)
+    return list(User.objects.filter(id__in=list(ids), role='student'))
