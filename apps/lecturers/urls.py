@@ -22,7 +22,13 @@ urlpatterns = [
     path('schedule/<int:schedule_id>/edit/', views_crud.schedule_edit, name='schedule_edit'),
     path('schedule/<int:schedule_id>/delete/', views_crud.schedule_delete, name='schedule_delete'),
     
-    # Attendance (только просмотр)
+    # Attendance (просмотр и отметка)
     path('attendance/', views.lecturer_attendance, name='lecturer_attendance'),
     path('attendance/<int:schedule_id>/', views.lecturer_attendance_detail, name='lecturer_attendance_detail'),
+    path('attendance/<int:schedule_id>/mark/', views.mark_attendance, name='mark_attendance'),
+    
+    # Exam results (ввод результатов экзамена)
+    path('exam-results/', views.lecturer_exam_results, name='lecturer_exam_results'),
+    path('exam-results/group/<int:group_id>/', views.lecturer_exam_results_group, name='lecturer_exam_results_group'),
+    path('exam-results/group/<int:group_id>/save/', views.save_exam_results, name='save_exam_results'),
 ]

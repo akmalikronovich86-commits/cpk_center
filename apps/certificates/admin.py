@@ -1,5 +1,24 @@
 from django.contrib import admin
-from .models import Certificate
+from .models import Certificate, Announcement
+
+
+@admin.register(Announcement)
+class AnnouncementAdmin(admin.ModelAdmin):
+    list_display = ('title', 'is_active', 'created_at', 'created_by')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('title', 'content')
+    ordering = ('-created_at',)
+    
+    fieldsets = (
+        ('E\'lon ma\'lumotlari', {
+            'fields': ('title', 'content', 'is_active')
+        }),
+        ('Tizim ma\'lumotlari', {
+            'fields': ('created_by', 'created_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at',)
 
 
 @admin.register(Certificate)

@@ -1,0 +1,164 @@
+{% extends "lecturers/base_lecturer.html" %}
+
+{% block title %}Zoom uchrashuvlar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .meetings-grid {
+        display: grid;
+        gap: 20px;
+    }
+    .meeting-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s;
+        border-left: 4px solid #1e3a5f;
+    }
+    .meeting-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    .meeting-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 15px;
+    }
+    .meeting-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #1e3a5f;
+    }
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .status-scheduled { background: #bee3f8; color: #2c5282; }
+    .status-in_progress { background: #c6f6d5; color: #22543d; }
+    .status-completed { background: #e2e8f0; color: #4a5568; }
+    .meeting-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    .info-label {
+        font-size: 12px;
+        color: #718096;
+        margin-bottom: 5px;
+    }
+    .info-value {
+        font-size: 14px;
+        color: #2d3748;
+        font-weight: 500;
+    }
+    .meeting-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .empty-state .icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>
+        <span>📹</span>
+        <span>Zoom uchrashuvlar</span>
+    </h2>
+    <div class="page-nav">
+        {% if prev_page_url %}
+        <a href="{% url prev_page_url %}">
+            <span>←</span>
+            <span>{{ prev_page_name }}</span>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if meetings %}
+<div class="meetings-grid">
+    {% for meeting in meetings %}
+    <div class="meeting-card">
+        <div class="meeting-header">
+            <div class="meeting-title">{{ meeting.topic }}</div>
+            <span class="status-badge status-{{ meeting.status }}">
+                {% if meeting.status == 'scheduled' %}📅 Rejalashtirilgan
+                {% elif meeting.status == 'in_progress' %}🟢 Jarayonda
+                {% elif meeting.status == 'completed' %}✅ Yakunlangan
+                {% else %}{{ meeting.status }}{% endif %}
+            </span>
+        </div>
+        
+        <div class="meeting-info">
+            <div class="info-item">
+                <span class="info-label">Boshlanish vaqti</span>
+                <span class="info-value">{{ meeting.start_time|date:"d.m.Y H:i" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Davomiyligi</span>
+                <span class="info-value">{{ meeting.duration }} daqiqa</span>
+            </div>
+            {% if meeting.course %}
+            <div class="info-item">
+                <span class="info-label">Kurs</span>
+                <span class="info-value">{{ meeting.course.code }}</span>
+            </div>
+            {% endif %}
+            {% if meeting.zoom_id %}
+            <div class="info-item">
+                <span class="info-label">Meeting ID</span>
+                <span class="info-value" style="font-family: monospace;">{{ meeting.zoom_id }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="meeting-actions">
+            {% if meeting.join_url and meeting.status != 'completed' %}
+            <a href="{{ meeting.join_url }}" target="_blank" class="btn btn-success">
+                🎥 Uchrashuvga qo'shilish
+            </a>
+            {% endif %}
+            {% if meeting.start_url and meeting.status != 'completed' %}
+            <a href="{{ meeting.start_url }}" target="_blank" class="btn">
+                ▶️ Uchrashuvni boshlash
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div style="margin-top: 20px; text-align: center; color: #718096; font-size: 14px;">
+    Jami: <strong>{{ total_meetings }}</strong> uchrасhuv
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="icon">📹</div>
+    <h3 style="color: #2d3748; margin-bottom: 10px;">Zoom uchrashuvlar topilmadi</h3>
+    <p style="color: #718096;">Sizga hali Zoom uchrashuvlar tayinlanmagan.</p>
+</div>
+{% endif %}
+
+{% endblock %}
