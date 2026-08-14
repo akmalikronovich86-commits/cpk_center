@@ -1,15 +1,15 @@
 {% extends "assessments/base_assessments.html" %}
 
-{% block title %}Мои слушатели{% endblock %}
+{% block title %}Mening tinglovchilarim{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="mb-0"><i class="bi bi-people-fill"></i> Мои слушатели</h3>
-    <span class="text-muted">Порог посещаемости: {{ threshold }}%</span>
+    <h3 class="mb-0"><i class="bi bi-people-fill"></i> Mening tinglovchilarim</h3>
+    <span class="text-muted">Qatnashish chegarasi: {{ threshold }}%</span>
 </div>
 
 {% if not groups_data %}
-    <div class="alert alert-info">У вас пока нет групп с занятиями.</div>
+    <div class="alert alert-info">Sizda hozircha mashg'ulotlar bo'lgan guruhlar yo'q.</div>
 {% endif %}
 
 {% for item in groups_data %}
@@ -23,13 +23,13 @@
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Слушатель</th>
-                        <th class="text-center">Занятий</th>
-                        <th class="text-center">Зачтено</th>
-                        <th class="text-center">Посещаемость</th>
-                        <th class="text-center">Экзамен</th>
-                        <th class="text-center">Пересдача</th>
-                        <th class="text-center">Статус</th>
+                        <th>Tinglovchi</th>
+                        <th class="text-center">Mashg'ulotlar</th>
+                        <th class="text-center">Hisoblangan</th>
+                        <th class="text-center">Qatnashish</th>
+                        <th class="text-center">Imtihon</th>
+                        <th class="text-center">Qayta topshirish</th>
+                        <th class="text-center">Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,13 +52,13 @@
                             {% if r.retake_score is not None %}
                                 <span class="badge {% if r.retake_passed %}badge-soft-success{% else %}badge-soft-danger{% endif %}">{{ r.retake_score }}%</span>
                             {% elif r.retake_allowed %}
-                                <span class="badge badge-soft-warning">Назначена</span>
+                                <span class="badge badge-soft-warning">Tayinlangan</span>
                             {% else %}<span class="text-muted">—</span>{% endif %}
                         </td>
                         <td class="text-center"><small>{{ r.status_label }}</small></td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="7" class="text-center text-muted py-3">Нет слушателей в группе.</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted py-3">Guruhda tinglovchilar yo'q.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
