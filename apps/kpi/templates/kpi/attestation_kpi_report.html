@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KPI-отчёт по аттестации — CPK Center</title>
+    <title>Attestatsiya bo'yicha KPI hisoboti — CPK Center</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -14,61 +14,61 @@
 </head>
 <body>
 <nav class="navbar navbar-dark px-4" style="background:#1e3a5f;">
-    <a class="navbar-brand fw-bold" href="/"><i class="bi bi-graph-up"></i> KPI — Аттестация</a>
+    <a class="navbar-brand fw-bold" href="/"><i class="bi bi-graph-up"></i> KPI — Attestatsiya</a>
     <div class="d-flex gap-2">
-        <a class="btn btn-sm btn-outline-light" href="{% url 'kpi:department_head_kpi_dashboard' %}">Основной KPI</a>
-        <a class="btn btn-sm btn-outline-light" href="{% url 'assessments:department_report' %}">Отчёт по группам</a>
-        <a class="btn btn-sm btn-light" href="{% url 'logout' %}?next=/login/">Выход</a>
+        <a class="btn btn-sm btn-outline-light" href="{% url 'kpi:department_head_kpi_dashboard' %}">Asosiy KPI</a>
+        <a class="btn btn-sm btn-outline-light" href="{% url 'assessments:department_report' %}">Guruhlar bo'yicha hisobot</a>
+        <a class="btn btn-sm btn-light" href="{% url 'logout' %}?next=/login/">Chiqish</a>
     </div>
 </nav>
 
 <div class="container-fluid px-4 py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0"><i class="bi bi-clipboard-check"></i> KPI-отчёт по аттестации слушателей</h3>
+        <h3 class="mb-0"><i class="bi bi-clipboard-check"></i> Tinglovchilar attestatsiyasi bo'yicha KPI hisoboti</h3>
         <form method="get" class="d-flex align-items-center gap-2">
-            <label class="text-muted small mb-0">Период:</label>
+            <label class="text-muted small mb-0">Davr:</label>
             <select name="period" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
-                <option value="week" {% if period == 'week' %}selected{% endif %}>Неделя</option>
-                <option value="month" {% if period == 'month' %}selected{% endif %}>Месяц</option>
-                <option value="quarter" {% if period == 'quarter' %}selected{% endif %}>Квартал</option>
-                <option value="year" {% if period == 'year' %}selected{% endif %}>Год</option>
+                <option value="week" {% if period == 'week' %}selected{% endif %}>Hafta</option>
+                <option value="month" {% if period == 'month' %}selected{% endif %}>Oy</option>
+                <option value="quarter" {% if period == 'quarter' %}selected{% endif %}>Chorak</option>
+                <option value="year" {% if period == 'year' %}selected{% endif %}>Yil</option>
             </select>
         </form>
     </div>
 
     <div class="row g-3 mb-4">
         <div class="col-md-3"><div class="card stat-card text-center p-3">
-            <div class="text-muted small">Групп в обучении</div>
+            <div class="text-muted small">O'qishda bo'lgan guruhlar</div>
             <div class="fs-2 fw-bold text-primary">{{ groups_in_progress }}</div>
-            <div class="text-muted small">из {{ total_groups }} всего</div>
+            <div class="text-muted small">jami {{ total_groups }} ta</div>
         </div></div>
         <div class="col-md-3"><div class="card stat-card text-center p-3">
-            <div class="text-muted small">Средняя посещаемость</div>
+            <div class="text-muted small">O'rtacha qatnashish</div>
             <div class="fs-2 fw-bold {% if avg_attendance >= 70 %}text-success{% else %}text-warning{% endif %}">{{ avg_attendance }}%</div>
         </div></div>
         <div class="col-md-3"><div class="card stat-card text-center p-3">
-            <div class="text-muted small">Прошли аттестацию</div>
+            <div class="text-muted small">Attestatsiyadan o'tganlar</div>
             <div class="fs-2 fw-bold text-success">{{ passed }}</div>
-            <div class="text-muted small">не прошли: {{ not_passed }}</div>
+            <div class="text-muted small">o'tmagan: {{ not_passed }}</div>
         </div></div>
         <div class="col-md-3"><div class="card stat-card text-center p-3">
-            <div class="text-muted small">Сертификатов за период</div>
+            <div class="text-muted small">Davrda berilgan sertifikatlar</div>
             <div class="fs-2 fw-bold">{{ certs_in_period }}</div>
-            <div class="text-muted small">всего: {{ total_certificates }}</div>
+            <div class="text-muted small">jami: {{ total_certificates }}</div>
         </div></div>
     </div>
 
     <div class="card stat-card">
-        <div class="card-header bg-white fw-bold"><i class="bi bi-person-video3"></i> Сводка по преподавателям</div>
+        <div class="card-header bg-white fw-bold"><i class="bi bi-person-video3"></i> O'qituvchilar bo'yicha ma'lumot</div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>ФИО преподавателя</th>
-                            <th class="text-center">Групп</th>
-                            <th class="text-center">Слушателей</th>
-                            <th class="text-center">Средняя посещаемость</th>
+                            <th>O'qituvchi F.I.O</th>
+                            <th class="text-center">Guruhlar</th>
+                            <th class="text-center">Tinglovchilar</th>
+                            <th class="text-center">O'rtacha qatnashish</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -82,7 +82,7 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="4" class="text-center text-muted py-3">Нет данных по преподавателям.</td></tr>
+                        <tr><td colspan="4" class="text-center text-muted py-3">O'qituvchilar bo'yicha ma'lumot yo'q.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
