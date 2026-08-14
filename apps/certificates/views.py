@@ -269,7 +269,8 @@ def student_dashboard(request):
                 pass
         
         # Уведомления
-        announcements = []  # Модель Announcement временно отключена
+        from .models import Announcement
+        announcements = Announcement.objects.filter(is_active=True).order_by('-created_at')[:3]
     
     # Статистика
     active_count = sum(1 for c in certificates if c.status == 'issued')
@@ -799,3 +800,48 @@ def student_announcements(request):
     }
     
     return render(request, 'certificates/student_announcements.html', context)
+
+
+@login_required
+def student_results(request):
+    """Результаты/прогресс слушателя по аттестации"""
+    from apps.groups.models import StudentRecord
+    from apps.assessments.models import AssessmentRecord
+    
+    # Получаем StudentRecord связанного пользователя
+    try:
+        student_record = StudentRecord.objects.get(user=request.user)
+    except StudentRecord.DoesNotExist:
+        context = {
+            'no_record': True,
+            'student_name': request.user.get_full_name() or request.user.username,
+        }
+        return render(request, 'certificates/student_results.html', context)
+    
+    # Получаем записи аттестации для всех групп студента
+    assessment_records = AssessmentRecord.objects.filter(
+        student=request.user
+    ).select_related('group', 'group__course').order_by('-updated_at')
+    
+    # Для каждой записи подготавливаем данные для отображения
+    results = []
+    for record in assessment_records:
+        result_data = {
+            'record': record,
+            'group_name': record.group.name,
+            'course_title': record.group.course.title if record.group.course else '-',
+            'attendance_color': 'success' if record.attendance_passed else 'danger',
+            'exam_color': 'success' if record.final_exam_passed else ('warning' if record.retake_allowed else 'danger'),
+            'status_color': 'success' if record.certificate_approved else ('info' if record.eligible_for_certificate else 'secondary'),
+        }
+        results.append(result_data)
+    
+    context = {
+        'student_record': student_record,
+        'results': results,
+        'has_results': len(results) > 0,
+        'attendance_threshold': AssessmentRecord.ATTENDANCE_THRESHOLD,
+        'exam_threshold': AssessmentRecord.EXAM_THRESHOLD,
+    }
+    
+    return render(request, 'certificates/student_results.html', context)

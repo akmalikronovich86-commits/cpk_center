@@ -1,0 +1,300 @@
+{% extends "certificates/base_student.html" %}
+
+{% block title %}Mening natijalarim{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: white;
+        padding: 25px 30px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .page-header h2 {
+        color: #1e3a5f;
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    .page-header p {
+        color: #718096;
+        font-size: 14px;
+    }
+    
+    .info-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .info-banner .thresholds {
+        display: flex;
+        gap: 30px;
+    }
+    .info-banner .threshold-item {
+        display: flex;
+        flex-direction: column;
+    }
+    .info-banner .label {
+        font-size: 12px;
+        opacity: 0.9;
+        margin-bottom: 5px;
+    }
+    .info-banner .value {
+        font-size: 24px;
+        font-weight: bold;
+    }
+    
+    .results-grid {
+        display: grid;
+        gap: 20px;
+    }
+    .result-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-left: 4px solid #1e3a5f;
+    }
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .result-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #1e3a5f;
+        margin-bottom: 5px;
+    }
+    .result-course {
+        color: #718096;
+        font-size: 14px;
+    }
+    .status-badge {
+        padding: 6px 14px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .status-success { background: #c6f6d5; color: #22543d; }
+    .status-info { background: #bee3f8; color: #2c5282; }
+    .status-warning { background: #feebc8; color: #7c2d12; }
+    .status-danger { background: #fed7d7; color: #742a2a; }
+    .status-secondary { background: #e2e8f0; color: #4a5568; }
+    
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .metric-card {
+        background: #f7fafc;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 3px solid #cbd5e0;
+    }
+    .metric-card.pass {
+        border-left-color: #48bb78;
+    }
+    .metric-card.fail {
+        border-left-color: #f56565;
+    }
+    .metric-label {
+        font-size: 12px;
+        color: #718096;
+        margin-bottom: 5px;
+    }
+    .metric-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1e3a5f;
+    }
+    .metric-sublabel {
+        font-size: 11px;
+        color: #a0aec0;
+        margin-top: 3px;
+    }
+    
+    .retake-info {
+        background: #fffaf0;
+        border-left: 4px solid #ed8936;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 15px;
+    }
+    .retake-info .icon {
+        font-size: 18px;
+        margin-right: 8px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .empty-state .icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if no_record %}
+<div class="empty-state">
+    <div class="icon">📋</div>
+    <h3 style="color: #2d3748; margin-bottom: 10px;">Ma'lumotlar topilmadi</h3>
+    <p style="color: #718096;">Sizning tinglovchi yozuvingiz topilmadi. Administrator bilan bog'laning.</p>
+</div>
+{% else %}
+
+<div class="page-header">
+    <h2>✅ Mening natijalarim</h2>
+    <p>{{ student_record.full_name }}</p>
+</div>
+
+<!-- Porogovye znacheniya -->
+<div class="info-banner">
+    <div>
+        <strong>📊 Attestatsiya mezonlari</strong>
+    </div>
+    <div class="thresholds">
+        <div class="threshold-item">
+            <div class="label">Qatnashish chegarasi</div>
+            <div class="value">{{ attendance_threshold }}%</div>
+        </div>
+        <div class="threshold-item">
+            <div class="label">Imtihon chegarasi</div>
+            <div class="value">{{ exam_threshold }}%</div>
+        </div>
+    </div>
+</div>
+
+<!-- Rezultaty po gruppam -->
+{% if has_results %}
+<div class="results-grid">
+    {% for result in results %}
+    <div class="result-card">
+        <div class="result-header">
+            <div>
+                <div class="result-title">{{ result.group_name }}</div>
+                <div class="result-course">{{ result.course_title }}</div>
+            </div>
+            <span class="status-badge status-{{ result.status_color }}">
+                {{ result.record.status_label }}
+            </span>
+        </div>
+        
+        <!-- Metriki -->
+        <div class="metrics-grid">
+            <!-- Qatnashish -->
+            <div class="metric-card {% if result.record.attendance_passed %}pass{% else %}fail{% endif %}">
+                <div class="metric-label">Qatnashish</div>
+                <div class="metric-value">{{ result.record.attendance_percentage|floatformat:1 }}%</div>
+                <div class="metric-sublabel">
+                    {{ result.record.counted_attendances }} / {{ result.record.total_lessons }} dars
+                </div>
+            </div>
+            
+            <!-- Imtihon -->
+            <div class="metric-card {% if result.record.final_exam_passed %}pass{% elif result.record.retake_allowed %}{% else %}fail{% endif %}">
+                <div class="metric-label">Imtihon</div>
+                <div class="metric-value">
+                    {% if result.record.exam_score is not None %}
+                        {{ result.record.exam_score|floatformat:1 }}%
+                    {% else %}
+                        -
+                    {% endif %}
+                </div>
+                <div class="metric-sublabel">
+                    {% if result.record.exam_passed %}
+                        ✅ Topshirildi
+                    {% elif result.record.exam_score is not None %}
+                        ❌ Yiqildi
+                    {% else %}
+                        Natija kiritilmagan
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Qayta topshirish (agar bor bo'lsa) -->
+            {% if result.record.retake_allowed %}
+            <div class="metric-card {% if result.record.retake_passed %}pass{% else %}{% endif %}">
+                <div class="metric-label">Qayta topshirish</div>
+                <div class="metric-value">
+                    {% if result.record.retake_score is not None %}
+                        {{ result.record.retake_score|floatformat:1 }}%
+                    {% else %}
+                        -
+                    {% endif %}
+                </div>
+                <div class="metric-sublabel">
+                    {% if result.record.retake_passed %}
+                        ✅ Topshirildi
+                    {% elif result.record.retake_score is not None %}
+                        ❌ Yiqildi
+                    {% else %}
+                        Kutilmoqda
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Sertifikat holati -->
+            {% if result.record.eligible_for_certificate or result.record.certificate_approved %}
+            <div class="metric-card pass">
+                <div class="metric-label">Sertifikat</div>
+                <div class="metric-value">
+                    {% if result.record.certificate_approved %}✅{% else %}⏳{% endif %}
+                </div>
+                <div class="metric-sublabel">
+                    {% if result.record.certificate_approved %}
+                        Tasdiqlandi
+                    {% else %}
+                        Tasdiqlashni kutish
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Qayta topshirish ma'lumoti -->
+        {% if result.record.retake_allowed and not result.record.retake_passed %}
+        <div class="retake-info">
+            <span class="icon">⏰</span>
+            <strong>Qayta topshirish tayinlandi</strong>
+            <div style="font-size: 13px; color: #744210; margin-top: 8px;">
+                Sizga qayta imtihon topshirishga ruxsat berildi. 
+                {% if result.record.retake_allowed_at %}
+                Tayinlangan sana: {{ result.record.retake_allowed_at|date:"d.m.Y H:i" }}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="icon">📊</div>
+    <h3 style="color: #2d3748; margin-bottom: 10px;">Attestatsiya ma'lumotlari yo'q</h3>
+    <p style="color: #718096;">Sizning attestatsiya natijalaringiz hali qayd qilinmagan.</p>
+</div>
+{% endif %}
+
+{% endif %}
+
+{% endblock %}

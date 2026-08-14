@@ -1,0 +1,137 @@
+{% extends "lecturers/base_lecturer.html" %}
+
+{% block title %}Material yuklash{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-form {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #cbd5e0;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+    }
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    .form-group input[type="file"] {
+        padding: 10px;
+        border: 2px dashed #cbd5e0;
+        background: #f7fafc;
+    }
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .help-text {
+        font-size: 12px;
+        color: #718096;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>
+        <span>➕</span>
+        <span>Yangi material yuklash</span>
+    </h2>
+</div>
+
+<div class="upload-form">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="title">Material nomi <span style="color: red;">*</span></label>
+            <input 
+                type="text" 
+                name="title" 
+                id="title" 
+                required 
+                placeholder="Masalan: Ma'ruza 1 - Kirish">
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Tavsif</label>
+            <textarea 
+                name="description" 
+                id="description" 
+                placeholder="Material haqida qisqacha ma'lumot..."></textarea>
+            <div class="help-text">Ixtiyoriy. Material mazmuni haqida qisqacha.</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="material_type">Material turi <span style="color: red;">*</span></label>
+            <select name="material_type" id="material_type" required>
+                <option value="document" selected>Hujjat (PDF, Word, Excel)</option>
+                <option value="video">Video</option>
+                <option value="presentation">Taqdimot (PowerPoint)</option>
+                <option value="other">Boshqa</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="course">Kurs</label>
+            <select name="course" id="course">
+                <option value="">-- Kursni tanlang --</option>
+                {% for course in my_courses %}
+                <option value="{{ course.id }}">{{ course.code }} - {{ course.title }}</option>
+                {% endfor %}
+            </select>
+            <div class="help-text">Ixtiyoriy. Muayyan kursga bog'lash uchun tanlang.</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="file">Fayl <span style="color: red;">*</span></label>
+            <input 
+                type="file" 
+                name="file" 
+                id="file" 
+                required
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.avi,.mov,.zip,.rar">
+            <div class="help-text">
+                Qo'llab-quvvatlanadigan formatlar: PDF, Word, Excel, PowerPoint, Video, Arxiv fayllari.
+                Maksimal hajm: 100 MB.
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <a href="{% url 'lecturers:lecturer_materials' %}" class="btn" style="background: #718096;">
+                ← Bekor qilish
+            </a>
+            <button type="submit" class="btn btn-success">
+                ✅ Yuklash
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

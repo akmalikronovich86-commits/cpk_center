@@ -1,0 +1,161 @@
+{% extends "lecturers/base_lecturer.html" %}
+
+{% block title %}Materiallar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .action-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .materials-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    thead {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        color: white;
+    }
+    th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 14px;
+    }
+    tr:hover {
+        background: #f7fafc;
+    }
+    .type-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .type-document { background: #bee3f8; color: #2c5282; }
+    .type-video { background: #fbd38d; color: #744210; }
+    .type-presentation { background: #c6f6d5; color: #22543d; }
+    .type-other { background: #e2e8f0; color: #4a5568; }
+    .file-icon {
+        font-size: 20px;
+        margin-right: 8px;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>
+        <span>📄</span>
+        <span>Mening materiallarim</span>
+    </h2>
+    <div class="page-nav">
+        {% if prev_page_url %}
+        <a href="{% url prev_page_url %}">
+            <span>←</span>
+            <span>{{ prev_page_name }}</span>
+        </a>
+        {% endif %}
+        {% if next_page_url %}
+        <a href="{% url next_page_url %}">
+            <span>{{ next_page_name }}</span>
+            <span>→</span>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Action bar -->
+<div class="action-bar">
+    <div style="color: #718096; font-size: 14px;">
+        Jami: <strong>{{ total_materials }}</strong> material
+    </div>
+    <a href="{% url 'lecturers:upload_material' %}" class="btn btn-success">
+        ➕ Yangi material yuklash
+    </a>
+</div>
+
+<!-- Materiallar jadvali -->
+{% if materials %}
+<div class="materials-table">
+    <table>
+        <thead>
+            <tr>
+                <th>Material nomi</th>
+                <th>Turi</th>
+                <th>Kurs</th>
+                <th>Yuklangan sana</th>
+                <th>Harakatlar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for material in materials %}
+            <tr>
+                <td>
+                    <span class="file-icon">📎</span>
+                    <strong>{{ material.title }}</strong>
+                    {% if material.description %}
+                    <br><small style="color: #718096;">{{ material.description|truncatewords:10 }}</small>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="type-badge type-{{ material.type }}">
+                        {% if material.type == 'document' %}Hujjat
+                        {% elif material.type == 'video' %}Video
+                        {% elif material.type == 'presentation' %}Taqdimot
+                        {% else %}Boshqa{% endif %}
+                    </span>
+                </td>
+                <td>
+                    {% if material.course %}
+                        {{ material.course.code }}
+                    {% else %}
+                        <span style="color: #718096;">-</span>
+                    {% endif %}
+                </td>
+                <td>{{ material.uploaded_at|date:"d.m.Y H:i" }}</td>
+                <td>
+                    {% if material.file %}
+                    <a href="{{ material.file.url }}" target="_blank" class="btn" style="padding: 6px 12px; font-size: 12px;">
+                        ⬇️ Yuklash
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <h3 style="color: #2d3748; margin-bottom: 10px;">Materiallar topilmadi</h3>
+    <p>Siz hali material yuklamagansiz.</p>
+    <a href="{% url 'lecturers:upload_material' %}" class="btn btn-success" style="margin-top: 20px;">
+        ➕ Birinchi materialni yuklash
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}
