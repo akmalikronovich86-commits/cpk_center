@@ -5,67 +5,67 @@ from apps.users.models import User
 
 
 class AssessmentRecord(models.Model):
-    """Сводная запись оценки слушателя по учебной группе (программе).
+    """Svodная zapis' otsenki slushatelya po uchebnoy gruppe (programme).
 
-    Агрегирует посещаемость и результаты экзамена, а также хранит
-    решения Директора об утверждении сертификата и допуске к пересдаче.
+    Agregiruyet poseshchayemost' i rezul'taty ekzamena, a takzhe khranit
+    resheniya Direktora ob utverzhdenii sertifikata i dopuske k peresdache.
     """
 
-    # Пороговые значения бизнес-логики
-    ATTENDANCE_THRESHOLD = 70  # % посещаемости
-    EXAM_THRESHOLD = 70        # % правильных ответов
+    # Porogovye znacheniya biznes-logiki
+    ATTENDANCE_THRESHOLD = 70  # % poseshchayemosti
+    EXAM_THRESHOLD = 70        # % pravil'nykh otvetov
 
     student = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         limit_choices_to={'role': 'student'},
         related_name='assessment_records',
-        verbose_name='Слушатель',
+        verbose_name='Tinglovchi',
     )
     group = models.ForeignKey(
         'courses.AcademicGroup',
         on_delete=models.CASCADE,
         related_name='assessment_records',
-        verbose_name='Учебная группа',
+        verbose_name='O\'quv guruhi',
     )
 
-    # --- Посещаемость ---
+    # --- Qatnashish ---
     total_lessons = models.PositiveIntegerField(
         default=0,
-        verbose_name='Всего занятий',
+        verbose_name='Jami darslar',
     )
     counted_attendances = models.DecimalField(
         max_digits=6,
         decimal_places=2,
         default=0,
-        verbose_name='Зачтённые посещения',
+        verbose_name='Hisobga olingan qatnashishlar',
     )
     attendance_percentage = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=0,
-        verbose_name='Посещаемость, %',
+        verbose_name='Qatnashish, %',
     )
     attendance_passed = models.BooleanField(
         default=False,
-        verbose_name='Порог посещаемости пройден',
+        verbose_name='Qatnashish chegarasi o\'tildi',
     )
 
-    # --- Экзамен ---
+    # --- Imtihon ---
     exam_score = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         null=True,
         blank=True,
-        verbose_name='Результат экзамена, %',
+        verbose_name='Imtihon natijasi, %',
     )
     exam_passed = models.BooleanField(
         default=False,
-        verbose_name='Экзамен сдан',
+        verbose_name='Imtihon topshirildi',
     )
     retake_allowed = models.BooleanField(
         default=False,
-        verbose_name='Пересдача разрешена',
+        verbose_name='Qayta topshirishga ruxsat berildi',
     )
     retake_allowed_by = models.ForeignKey(
         User,
@@ -73,33 +73,33 @@ class AssessmentRecord(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name='allowed_retakes',
-        verbose_name='Пересдачу разрешил',
+        verbose_name='Qayta topshirishga ruxsat bergan',
     )
     retake_allowed_at = models.DateTimeField(
         null=True,
         blank=True,
-        verbose_name='Дата разрешения пересдачи',
+        verbose_name='Ruxsat berilgan sana',
     )
     retake_score = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         null=True,
         blank=True,
-        verbose_name='Результат пересдачи, %',
+        verbose_name='Qayta topshirish natijasi, %',
     )
     retake_passed = models.BooleanField(
         default=False,
-        verbose_name='Пересдача сдана',
+        verbose_name='Qayta topshirish muvaffaqiyatli',
     )
 
-    # --- Итог ---
+    # --- Yakuniy natija ---
     eligible_for_certificate = models.BooleanField(
         default=False,
-        verbose_name='Допущен к сертификату',
+        verbose_name='Sertifikatga tayyor',
     )
     certificate_approved = models.BooleanField(
         default=False,
-        verbose_name='Сертификат утверждён',
+        verbose_name='Sertifikat tasdiqlandi',
     )
     certificate_approved_by = models.ForeignKey(
         User,
@@ -107,12 +107,12 @@ class AssessmentRecord(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name='approved_certificates_assessment',
-        verbose_name='Сертификат утвердил',
+        verbose_name='Sertifikatni tasdiqlagan',
     )
     certificate_approved_at = models.DateTimeField(
         null=True,
         blank=True,
-        verbose_name='Дата утверждения сертификата',
+        verbose_name='Tasdiqlangan sana',
     )
     certificate = models.ForeignKey(
         'certificates.Certificate',
@@ -120,15 +120,15 @@ class AssessmentRecord(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name='assessment_records',
-        verbose_name='Выданный сертификат',
+        verbose_name='Berilgan sertifikat',
     )
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Обновлено')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Yaratilgan')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Yangilangan')
 
     class Meta:
-        verbose_name = 'Запись аттестации'
-        verbose_name_plural = 'Записи аттестации'
+        verbose_name = 'Attestatsiya yozuvi'
+        verbose_name_plural = 'Attestatsiya yozuvlari'
         unique_together = ('student', 'group')
         ordering = ['-updated_at']
 
@@ -142,15 +142,15 @@ class AssessmentRecord(models.Model):
 
     @property
     def status_label(self):
-        """Человекочитаемый статус записи (для интерфейса)."""
+        """Inson o'qiy oladigan holat belgisi (interfeys uchun)."""
         if self.certificate_approved:
-            return 'Сертификат утверждён'
+            return 'Sertifikat tasdiqlandi'
         if self.eligible_for_certificate:
-            return 'Готов к сертификату'
+            return 'Sertifikatga tayyor'
         if not self.exam_passed and self.retake_allowed and not self.retake_passed:
-            return 'Назначена пересдача'
+            return 'Qayta topshirish tayinlandi'
         if not self.exam_passed and not self.retake_passed:
-            return 'Экзамен не сдан'
+            return 'Imtihonda yiqildi'
         if not self.attendance_passed:
-            return 'Недостаточная посещаемость'
-        return 'В процессе'
+            return 'Qatnashish yetarli emas'
+        return 'Jarayonda'
