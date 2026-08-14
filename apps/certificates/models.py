@@ -3,6 +3,41 @@ from django.utils import timezone
 import secrets
 
 
+class Announcement(models.Model):
+    """E'lonlar - tinglovchilar uchun xabarlar"""
+    
+    title = models.CharField(
+        max_length=255,
+        verbose_name="Sarlavha"
+    )
+    content = models.TextField(
+        verbose_name="Matn"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Faol"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Yaratilgan"
+    )
+    created_by = models.ForeignKey(
+        'users.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Yaratgan"
+    )
+    
+    class Meta:
+        verbose_name = "E'lon"
+        verbose_name_plural = "E'lonlar"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.title
+
+
 class Certificate(models.Model):
     """Sertifikat - malaka oshirish haqida guvohnoma"""
 

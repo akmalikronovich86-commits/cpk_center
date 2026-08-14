@@ -1,0 +1,139 @@
+{% extends "lecturers/base_lecturer.html" %}
+
+{% block title %}Dars jadvali{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+    .filter-bar input {
+        padding: 10px 15px;
+        border: 1px solid #cbd5e0;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .schedule-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    thead {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        color: white;
+    }
+    th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 14px;
+    }
+    tr:hover {
+        background: #f7fafc;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .status-published { background: #c6f6d5; color: #22543d; }
+    .status-draft { background: #fed7d7; color: #742a2a; }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>
+        <span>📅</span>
+        <span>Dars jadvali</span>
+    </h2>
+    <div class="page-nav">
+        {% if prev_page_url %}
+        <a href="{% url prev_page_url %}">
+            <span>←</span>
+            <span>{{ prev_page_name }}</span>
+        </a>
+        {% endif %}
+        {% if next_page_url %}
+        <a href="{% url next_page_url %}">
+            <span>{{ next_page_name }}</span>
+            <span>→</span>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filtr -->
+<div class="filter-bar">
+    <form method="get" style="display: flex; gap: 15px; align-items: center; width: 100%;">
+        <label for="date" style="font-weight: 600; color: #4a5568;">Sana:</label>
+        <input type="date" name="date" id="date" value="{{ request.GET.date }}">
+        <button type="submit" class="btn">Filtrлash</button>
+        {% if request.GET.date %}
+        <a href="{% url 'lecturers:lecturer_schedule' %}" class="btn" style="background: #718096;">Tozalash</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Jadval -->
+{% if schedules %}
+<div class="schedule-table">
+    <table>
+        <thead>
+            <tr>
+                <th>Sana</th>
+                <th>Vaqt</th>
+                <th>Kurs</th>
+                <th>Guruh</th>
+                <th>Holat</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for schedule in schedules %}
+            <tr>
+                <td>{{ schedule.date_start|date:"d.m.Y (l)" }}</td>
+                <td>{{ schedule.date_start|date:"H:i" }} - {{ schedule.date_end|date:"H:i" }}</td>
+                <td><strong>{{ schedule.course.title }}</strong><br><small style="color: #718096;">{{ schedule.course.code }}</small></td>
+                <td>{% if schedule.group %}{{ schedule.group.name }}{% else %}-{% endif %}</td>
+                <td>
+                    <span class="status-badge status-{{ schedule.status }}">
+                        {% if schedule.status == 'published' %}Nashr qilingan{% else %}Qoralama{% endif %}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <h3 style="color: #2d3748; margin-bottom: 10px;">Jadval topilmadi</h3>
+    <p>Sizga hali dars jadvali tayinlanmagan yoki filtrlangan sanada darslar yo'q.</p>
+</div>
+{% endif %}
+
+{% endblock %}

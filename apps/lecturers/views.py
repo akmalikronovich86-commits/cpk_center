@@ -17,9 +17,10 @@ import os
 PAGES_ORDER = [
     ('lecturers:lecturer_dashboard', 'Bosh sahifa', '🏠'),
     ('lecturers:lecturer_schedule', 'Dars jadvali', '📅'),
-    ('lecturers:lecturer_courses', 'Kurslar', ''),
+    ('lecturers:lecturer_courses', 'Kurslar', '📚'),
     ('lecturers:lecturer_students', 'Tinglovchilar', '👥'),
     ('assessments:teacher_students', 'Attestatsiya', '✅'),
+    ('lecturers:lecturer_exam_results', 'Imtihon natijalari', '📝'),
     ('lecturers:lecturer_materials', 'Materiallar', '📄'),
     ('lecturers:lecturer_zoom', 'Zoom uchrashuvlar', '📹'),
 ]
@@ -301,16 +302,204 @@ def lecturer_attendance(request):
 @login_required
 @lecturer_required
 def lecturer_attendance_detail(request, schedule_id):
-    """Детальная посещаемость конкретного занятия"""
+    """Детальная посещаемость конкретного занятия с возможностью отметки"""
     schedule = get_object_or_404(Schedule, id=schedule_id, lecturer=request.user)
+    
+    # Получаем список студентов группы
+    from apps.groups.models import StudentRecord
+    group_students = StudentRecord.objects.filter(group=schedule.group.name) if schedule.group else []
+    
+    # Получаем существующие отметки посещаемости
     attendances = Attendance.objects.filter(schedule=schedule).select_related('student')
+    
+    # Создаём словарь для быстрого доступа к статусам
+    attendance_dict = {att.student.id: att for att in attendances}
+    
+    # Формируем список студентов с их статусами
+    student_attendance_list = []
+    for student_record in group_students:
+        # Находим User объект по XTM или другому идентификатору
+        try:
+            user = User.objects.get(username=student_record.xtm)
+        except User.DoesNotExist:
+            continue
+            
+        attendance = attendance_dict.get(user.id)
+        student_attendance_list.append({
+            'user': user,
+            'student_record': student_record,
+            'attendance': attendance,
+            'status': attendance.status if attendance else 'absent',
+        })
     
     context = {
         'schedule': schedule,
-        'attendances': attendances,
+        'student_attendance_list': student_attendance_list,
     }
     
     return render(request, 'lecturers/attendance_detail.html', context)
+
+@login_required
+@lecturer_required
+def mark_attendance(request, schedule_id):
+    """Сохранение отметок посещаемости преподавателем"""
+    if request.method != 'POST':
+        return redirect('lecturers:lecturer_attendance_detail', schedule_id=schedule_id)
+    
+    schedule = get_object_or_404(Schedule, id=schedule_id, lecturer=request.user)
+    
+    # Получаем данные из формы
+    student_ids = request.POST.getlist('student_ids[]')
+    
+    from apps.assessments.services import calculate_attendance
+    
+    updated_count = 0
+    for student_id in student_ids:
+        status = request.POST.get(f'status_{student_id}')
+        if not status:
+            continue
+            
+        try:
+            student = User.objects.get(id=student_id, role='student')
+        except User.DoesNotExist:
+            continue
+        
+        # Создаём или обновляем запись посещаемости
+        attendance, created = Attendance.objects.update_or_create(
+            schedule=schedule,
+            student=student,
+            defaults={
+                'status': status,
+                'marked_by': request.user,
+            }
+        )
+        updated_count += 1
+        
+        # Пересчитываем AssessmentRecord для этого студента
+        if schedule.group:
+            calculate_attendance(student, schedule.group, save=True)
+    
+    messages.success(request, f"Davomat belgilandi: {updated_count} ta tinglovchi")
+    return redirect('lecturers:lecturer_attendance_detail', schedule_id=schedule_id)
+
+
+@login_required
+@lecturer_required
+def lecturer_exam_results(request):
+    """Список групп для ввода результатов экзамена"""
+    my_groups = AcademicGroup.objects.filter(course__lecturer=request.user).select_related('course')
+    
+    context = {
+        'groups': my_groups,
+        'total_groups': my_groups.count(),
+    }
+    
+    context.update(get_navigation('lecturers:lecturer_dashboard'))
+    return render(request, 'lecturers/exam_results_groups.html', context)
+
+
+@login_required
+@lecturer_required
+def lecturer_exam_results_group(request, group_id):
+    """Ввод результатов экзамена для группы"""
+    group = get_object_or_404(AcademicGroup, id=group_id, course__lecturer=request.user)
+    
+    # Получаем студентов группы
+    from apps.groups.models import StudentRecord
+    from apps.assessments.models import AssessmentRecord
+    
+    group_students = StudentRecord.objects.filter(group=group.name)
+    
+    # Формируем список студентов с их текущими результатами
+    student_results = []
+    for student_record in group_students:
+        try:
+            user = User.objects.get(username=student_record.xtm, role='student')
+        except User.DoesNotExist:
+            continue
+        
+        # Получаем или создаём запись аттестации
+        assessment, _ = AssessmentRecord.objects.get_or_create(
+            student=user,
+            group=group
+        )
+        
+        student_results.append({
+            'user': user,
+            'student_record': student_record,
+            'assessment': assessment,
+        })
+    
+    context = {
+        'group': group,
+        'student_results': student_results,
+    }
+    
+    return render(request, 'lecturers/exam_results_input.html', context)
+
+
+@login_required
+@lecturer_required
+def save_exam_results(request, group_id):
+    """Сохранение результатов экзамена"""
+    if request.method != 'POST':
+        return redirect('lecturers:lecturer_exam_results_group', group_id=group_id)
+    
+    group = get_object_or_404(AcademicGroup, id=group_id, course__lecturer=request.user)
+    
+    from apps.assessments.models import AssessmentRecord
+    from apps.assessments.services import check_eligibility
+    from decimal import Decimal
+    
+    student_ids = request.POST.getlist('student_ids[]')
+    updated_count = 0
+    
+    for student_id in student_ids:
+        exam_score = request.POST.get(f'exam_score_{student_id}', '').strip()
+        retake_score = request.POST.get(f'retake_score_{student_id}', '').strip()
+        
+        try:
+            student = User.objects.get(id=student_id, role='student')
+        except User.DoesNotExist:
+            continue
+        
+        # Получаем запись аттестации
+        assessment, _ = AssessmentRecord.objects.get_or_create(
+            student=student,
+            group=group
+        )
+        
+        # Обновляем баллы если введены
+        updated = False
+        if exam_score:
+            try:
+                score = Decimal(exam_score)
+                if 0 <= score <= 100:
+                    assessment.exam_score = score
+                    assessment.exam_passed = score >= AssessmentRecord.EXAM_THRESHOLD
+                    updated = True
+            except (ValueError, Decimal.InvalidOperation):
+                pass
+        
+        if retake_score:
+            try:
+                score = Decimal(retake_score)
+                if 0 <= score <= 100:
+                    assessment.retake_score = score
+                    assessment.retake_passed = score >= AssessmentRecord.EXAM_THRESHOLD
+                    updated = True
+            except (ValueError, Decimal.InvalidOperation):
+                pass
+        
+        if updated:
+            assessment.save()
+            # Пересчитываем допуск к сертификату
+            check_eligibility(student, group, recalculate=False, save=True)
+            updated_count += 1
+    
+    messages.success(request, f"Imtihon natijalari saqlandi: {updated_count} ta tinglovchi")
+    return redirect('lecturers:lecturer_exam_results_group', group_id=group_id)
+
 
 @login_required
 @lecturer_required

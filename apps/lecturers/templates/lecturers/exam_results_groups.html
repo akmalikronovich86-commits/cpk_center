@@ -1,0 +1,123 @@
+{% extends "lecturers/base_lecturer.html" %}
+
+{% block title %}Imtihon natijalari{% endblock %}
+
+{% block extra_css %}
+<style>
+    .groups-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    .group-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border-left: 4px solid #4299e1;
+    }
+    .group-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .group-card h3 {
+        color: #1e3a5f;
+        margin-bottom: 15px;
+        font-size: 18px;
+    }
+    .group-info {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .info-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #4a5568;
+    }
+    .btn-enter {
+        background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        display: inline-block;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        width: 100%;
+        text-align: center;
+    }
+    .btn-enter:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(66, 153, 225, 0.3);
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>
+        <span>📝</span>
+        <span>Imtihon natijalari</span>
+    </h2>
+    <div class="page-nav">
+        {% if prev_page_url %}
+        <a href="{% url prev_page_url %}" class="btn" style="background: #718096;">
+            ← {{ prev_page_name }}
+        </a>
+        {% endif %}
+        
+        {% if next_page_url %}
+        <a href="{% url next_page_url %}" class="btn" style="background: #718096;">
+            {{ next_page_name }} →
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if groups %}
+<div class="groups-grid">
+    {% for group in groups %}
+    <div class="group-card">
+        <h3>{{ group.name }}</h3>
+        <div class="group-info">
+            <div class="info-row">
+                <span>📚</span>
+                <span>{{ group.course.title }}</span>
+            </div>
+            <div class="info-row">
+                <span>🔢</span>
+                <span>Kod: {{ group.course.code }}</span>
+            </div>
+            {% if group.start_date %}
+            <div class="info-row">
+                <span>📅</span>
+                <span>{{ group.start_date|date:"d.m.Y" }}</span>
+            </div>
+            {% endif %}
+        </div>
+        <a href="{% url 'lecturers:lecturer_exam_results_group' group.id %}" class="btn-enter">
+            Natijalarni kiritish →
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <h3 style="color: #2d3748; margin-bottom: 10px;">Guruhlar topilmadi</h3>
+    <p>Sizda hozircha guruhlar yo'q.</p>
+</div>
+{% endif %}
+
+{% endblock %}
