@@ -117,43 +117,50 @@
 </div>
 
 <!-- Davomat ro'yxati -->
-{% if attendances %}
-<div class="attendance-table">
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Tinglovchi</th>
-                <th>Holat</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for attendance in attendances %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>
-                    <strong>{{ attendance.student.get_full_name|default:attendance.student.username }}</strong>
-                </td>
-                <td>
-                    {% if attendance.status == 'present' %}
-                    <span class="status-badge status-present">✅ Keldi</span>
-                    {% elif attendance.status == 'absent' %}
-                    <span class="status-badge status-absent">❌ Kelmadi</span>
-                    {% elif attendance.status == 'late' %}
-                    <span class="status-badge status-late">⏰ Kechikdi</span>
-                    {% else %}
-                    <span class="status-badge" style="background: #e2e8f0; color: #4a5568;">-</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+{% if student_attendance_list %}
+<form method="post" action="{% url 'lecturers:mark_attendance' schedule.id %}">
+    {% csrf_token %}
+    <div class="attendance-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Tinglovchi</th>
+                    <th>Holat</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in student_attendance_list %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <strong>{{ item.student_record.full_name }}</strong>
+                        <input type="hidden" name="student_ids[]" value="{{ item.user.id }}">
+                    </td>
+                    <td>
+                        <select name="status_{{ item.user.id }}" class="status-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 14px; min-width: 150px;">
+                            <option value="present" {% if item.status == 'present' %}selected{% endif %}>✅ Keldi</option>
+                            <option value="absent" {% if item.status == 'absent' %}selected{% endif %}>❌ Kelmadi</option>
+                            <option value="late" {% if item.status == 'late' %}selected{% endif %}>⏰ Kechikdi</option>
+                            <option value="excused" {% if item.status == 'excused' %}selected{% endif %}>📝 Uzrli sabab</option>
+                        </select>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div style="margin-top: 20px; text-align: center;">
+        <button type="submit" class="btn" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 12px 30px; font-size: 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer;">
+            💾 Saqlash
+        </button>
+    </div>
+</form>
 {% else %}
 <div class="empty-state">
-    <h3 style="color: #2d3748; margin-bottom: 10px;">Davomat ma'lumotlari yo'q</h3>
-    <p>Bu dars uchun hali davomat belgilanmagan.</p>
+    <h3 style="color: #2d3748; margin-bottom: 10px;">Tinglovchilar topilmadi</h3>
+    <p>Bu guruhda tinglovchilar mavjud emas.</p>
 </div>
 {% endif %}
 
