@@ -1,26 +1,26 @@
 {% extends "assessments/base_assessments.html" %}
 
-{% block title %}Отчёт по группам{% endblock %}
+{% block title %}Guruhlar bo'yicha hisobot{% endblock %}
 
 {% block content %}
-<h3 class="mb-4"><i class="bi bi-clipboard-data"></i> Сводный отчёт по учебным группам</h3>
+<h3 class="mb-4"><i class="bi bi-clipboard-data"></i> O'quv guruhlari bo'yicha umumiy hisobot</h3>
 
 <div class="row g-3 mb-4">
     <div class="col-md-4">
         <div class="card stat-card text-center p-3">
-            <div class="text-muted small">Всего групп</div>
+            <div class="text-muted small">Jami guruhlar</div>
             <div class="fs-2 fw-bold text-primary">{{ total_groups }}</div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card stat-card text-center p-3">
-            <div class="text-muted small">Всего слушателей</div>
+            <div class="text-muted small">Jami tinglovchilar</div>
             <div class="fs-2 fw-bold">{{ total_students }}</div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card stat-card text-center p-3">
-            <div class="text-muted small">Допущены к сертификату</div>
+            <div class="text-muted small">Sertifikatga tayyor</div>
             <div class="fs-2 fw-bold text-success">{{ total_eligible }}</div>
         </div>
     </div>
@@ -32,12 +32,12 @@
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Группа</th>
-                        <th>Курс</th>
-                        <th class="text-center">Слушателей</th>
-                        <th class="text-center">Ср. посещаемость</th>
-                        <th class="text-center">Допущены</th>
-                        <th class="text-center">Сертификатов</th>
+                        <th>Guruh</th>
+                        <th>Kurs</th>
+                        <th class="text-center">Tinglovchilar</th>
+                        <th class="text-center">O'rtacha qatnashish</th>
+                        <th class="text-center">Tayyor</th>
+                        <th class="text-center">Sertifikatlar</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -53,7 +53,7 @@
                         <td class="text-center">{{ s.approved }}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="6" class="text-center text-muted py-3">Группы не найдены.</td></tr>
+                    <tr><td colspan="6" class="text-center text-muted py-3">Guruhlar topilmadi.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
