@@ -271,6 +271,11 @@ setTimeout(function() {
                 <span class="icon">✅</span>
                 <span>Attestatsiya</span>
             </a>
+            <a href="{% url 'lecturers:lecturer_exam_results' %}" 
+               class="nav-item {% if request.resolver_match.url_name == 'lecturer_exam_results' or request.resolver_match.url_name == 'lecturer_exam_results_group' %}active{% endif %}">
+                <span class="icon">📝</span>
+                <span>Imtihon natijalari</span>
+            </a>
             <a href="{% url 'lecturers:lecturer_materials' %}" 
                class="nav-item {% if request.resolver_match.url_name == 'lecturer_materials' %}active{% endif %}">
                 <span class="icon">📄</span>
