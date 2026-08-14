@@ -7,6 +7,7 @@ urlpatterns = [
     path('generate/<int:certificate_id>/', views.generate_certificate_pdf, name='generate_pdf'),
     path('verify/<str:qr_code>/', views.verify_certificate, name='verify'),
     path('student/dashboard/', views.student_dashboard, name='student_dashboard'),
+    path('student/results/', views.student_results, name='student_results'),
     path('student/schedule/', views.student_schedule, name='student_schedule'),
     path('student/announcements/', views.student_announcements, name='student_announcements'),
     path('student/materials/', views.student_materials, name='student_materials'),

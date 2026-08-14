@@ -169,11 +169,20 @@ setTimeout(function() {
         <a href="{% url 'certificates:student_dashboard' %}" class="tab {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}">
             📜 Sertifikatlarim
         </a>
+        <a href="{% url 'certificates:student_results' %}" class="tab {% if request.resolver_match.url_name == 'student_results' %}active{% endif %}">
+            ✅ Mening natijalarim
+        </a>
+        <a href="{% url 'certificates:student_schedule' %}" class="tab {% if request.resolver_match.url_name == 'student_schedule' %}active{% endif %}">
+            📅 Dars jadvali
+        </a>
         <a href="{% url 'certificates:student_materials' %}" class="tab {% if request.resolver_match.url_name == 'student_materials' %}active{% endif %}">
             📚 Materiallar
         </a>
         <a href="{% url 'certificates:student_zoom_recordings' %}" class="tab {% if request.resolver_match.url_name == 'student_zoom_recordings' %}active{% endif %}">
             🎥 Onlayn darslar
+        </a>
+        <a href="{% url 'certificates:student_announcements' %}" class="tab {% if request.resolver_match.url_name == 'student_announcements' %}active{% endif %}">
+            🔔 E'lonlar
         </a>
     </div>
     {% endif %}

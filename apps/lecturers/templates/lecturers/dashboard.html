@@ -1,0 +1,170 @@
+{% extends "lecturers/base_lecturer.html" %}
+
+{% block title %}Bosh sahifa{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .stat-card {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    .stat-card .number {
+        font-size: 36px;
+        font-weight: bold;
+        color: #1e3a5f;
+        margin-bottom: 5px;
+    }
+    .stat-card .label {
+        color: #718096;
+        font-size: 14px;
+    }
+    
+    .schedule-section {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+    .schedule-section h3 {
+        color: #1e3a5f;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .schedule-item {
+        padding: 15px;
+        border-left: 4px solid #1e3a5f;
+        background: #f7fafc;
+        margin-bottom: 12px;
+        border-radius: 6px;
+    }
+    .schedule-time {
+        font-weight: 600;
+        color: #1e3a5f;
+        margin-bottom: 5px;
+    }
+    .schedule-course {
+        color: #4a5568;
+        font-size: 14px;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #718096;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>
+        <span>🏠</span>
+        <span>Bosh sahifa</span>
+    </h2>
+    {% if next_page_url %}
+    <div class="page-nav">
+        <a href="{% url next_page_url %}">
+            <span>{{ next_page_name }}</span>
+            <span>→</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Statistika -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="number">{{ total_courses }}</div>
+        <div class="label">Mening kurslarim</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ total_groups }}</div>
+        <div class="label">Mening guruhlarim</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ total_students }}</div>
+        <div class="label">Jami tinglovchilar</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ total_materials }}</div>
+        <div class="label">Yuklangan materiallar</div>
+    </div>
+</div>
+
+<!-- Bugungi darslar -->
+<div class="schedule-section">
+    <h3>📅 Bugungi darslar</h3>
+    {% if today_schedules %}
+        {% for schedule in today_schedules %}
+        <div class="schedule-item">
+            <div class="schedule-time">
+                {{ schedule.date_start|date:"H:i" }} - {{ schedule.date_end|date:"H:i" }}
+            </div>
+            <div class="schedule-course">
+                <strong>{{ schedule.course.title }}</strong>
+                {% if schedule.group %} | Guruh: {{ schedule.group.name }}{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <p>Bugun darslar yo'q</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Ertangi darslar -->
+<div class="schedule-section">
+    <h3>📅 Ertangi darslar</h3>
+    {% if tomorrow_schedules %}
+        {% for schedule in tomorrow_schedules %}
+        <div class="schedule-item">
+            <div class="schedule-time">
+                {{ schedule.date_start|date:"H:i" }} - {{ schedule.date_end|date:"H:i" }}
+            </div>
+            <div class="schedule-course">
+                <strong>{{ schedule.course.title }}</strong>
+                {% if schedule.group %} | Guruh: {{ schedule.group.name }}{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <p>Ertaga darslar yo'q</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Yaqin darslar -->
+{% if upcoming_schedules %}
+<div class="schedule-section">
+    <h3>📋 Yaqin kunlardagi darslar</h3>
+    {% for schedule in upcoming_schedules %}
+    <div class="schedule-item">
+        <div class="schedule-time">
+            {{ schedule.date_start|date:"d.m.Y H:i" }} - {{ schedule.date_end|date:"H:i" }}
+        </div>
+        <div class="schedule-course">
+            <strong>{{ schedule.course.title }}</strong>
+            {% if schedule.group %} | Guruh: {{ schedule.group.name }}{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}
