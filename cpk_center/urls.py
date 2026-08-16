@@ -25,7 +25,7 @@ urlpatterns = [
     # Короткие URL для личных кабинетов (перенаправления)
     path('methodist/dashboard/', RedirectView.as_view(url='/certificates/methodist/dashboard/', permanent=False), name='methodist_dashboard_short'),
     path('director/dashboard/', RedirectView.as_view(url='/certificates/director/dashboard/', permanent=False), name='director_dashboard_short'),
-    path('department-head/dashboard/', RedirectView.as_view(url='/certificates/department-head/dashboard/', permanent=False), name='department_head_dashboard_short'),
+    path('department-head/dashboard/', RedirectView.as_view(url='/kpi/dashboard/', permanent=False), name='department_head_dashboard_short'),
     path('student/dashboard/', RedirectView.as_view(url='/certificates/student/dashboard/', permanent=False), name='student_dashboard_short'),
 
     # Authentication
