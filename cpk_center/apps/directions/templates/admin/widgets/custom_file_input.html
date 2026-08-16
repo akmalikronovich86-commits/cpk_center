@@ -1,0 +1,21 @@
+{% if widget.is_initial %}
+    <p class="file-upload" style="display: none;">
+        {{ widget.initial_text }}: 
+        <a href="{{ widget.value.url }}">
+            {{ widget.value }}
+        </a>
+        {% if not widget.required %}
+            <span style="margin-left: 10px;">
+                <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}">
+                <label for="{{ widget.checkbox_id }}">{{ widget.clear_checkbox_label }}</label>
+            </span>
+        {% endif %}
+    </p>
+{% endif %}
+
+<input type="{{ widget.type }}" 
+       name="{{ widget.name }}" 
+       id="{{ widget.attrs.id }}" 
+       style="display: none;"
+       {% if widget.attrs.accept %}accept="{{ widget.attrs.accept }}"{% endif %}
+       {% if widget.attrs.class %}class="{{ widget.attrs.class }}"{% endif %}>

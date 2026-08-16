@@ -1,0 +1,63 @@
+{% extends "assessments/base_assessments.html" %}
+
+{% block title %}Guruhlar bo'yicha hisobot{% endblock %}
+
+{% block content %}
+<h3 class="mb-4"><i class="bi bi-clipboard-data"></i> O'quv guruhlari bo'yicha umumiy hisobot</h3>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card text-center p-3">
+            <div class="text-muted small">Jami guruhlar</div>
+            <div class="fs-2 fw-bold text-primary">{{ total_groups }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card text-center p-3">
+            <div class="text-muted small">Jami tinglovchilar</div>
+            <div class="fs-2 fw-bold">{{ total_students }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card text-center p-3">
+            <div class="text-muted small">Sertifikatga tayyor</div>
+            <div class="fs-2 fw-bold text-success">{{ total_eligible }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card stat-card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Guruh</th>
+                        <th>Kurs</th>
+                        <th class="text-center">Tinglovchilar</th>
+                        <th class="text-center">O'rtacha qatnashish</th>
+                        <th class="text-center">Tayyor</th>
+                        <th class="text-center">Sertifikatlar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in groups_summary %}
+                    <tr>
+                        <td>{{ s.group.name }}</td>
+                        <td class="text-muted">{{ s.group.course.title }}</td>
+                        <td class="text-center">{{ s.student_count }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if s.avg_attendance >= 70 %}badge-soft-success{% else %}badge-soft-warning{% endif %}">{{ s.avg_attendance }}%</span>
+                        </td>
+                        <td class="text-center">{{ s.eligible }}</td>
+                        <td class="text-center">{{ s.approved }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-3">Guruhlar topilmadi.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

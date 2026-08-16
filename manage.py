@@ -2,8 +2,12 @@
 import os
 import sys
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cpk_center.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cpk_center.cpk_center.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

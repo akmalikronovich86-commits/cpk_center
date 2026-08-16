@@ -1,0 +1,138 @@
+{% extends "lecturers/base_lecturer.html" %}
+
+{% block title %}Kurslar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .courses-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+    .course-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s;
+        border-top: 4px solid #1e3a5f;
+    }
+    .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+    .course-header {
+        margin-bottom: 15px;
+    }
+    .course-code {
+        display: inline-block;
+        background: #ebf8ff;
+        color: #1e3a5f;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    .course-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #1e3a5f;
+        margin-bottom: 10px;
+    }
+    .course-info {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        color: #4a5568;
+    }
+    .info-label {
+        font-weight: 500;
+    }
+    .info-value {
+        color: #1e3a5f;
+        font-weight: 600;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .empty-state .icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>
+        <span>📚</span>
+        <span>Mening kurslarim</span>
+    </h2>
+    <div class="page-nav">
+        {% if prev_page_url %}
+        <a href="{% url prev_page_url %}">
+            <span>←</span>
+            <span>{{ prev_page_name }}</span>
+        </a>
+        {% endif %}
+        {% if next_page_url %}
+        <a href="{% url next_page_url %}">
+            <span>{{ next_page_name }}</span>
+            <span>→</span>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if courses %}
+<div class="courses-grid">
+    {% for course in courses %}
+    <div class="course-card">
+        <div class="course-header">
+            <div class="course-code">{{ course.code }}</div>
+            <div class="course-title">{{ course.title }}</div>
+        </div>
+        
+        {% if course.description %}
+        <p style="color: #718096; font-size: 14px; line-height: 1.6;">
+            {{ course.description|truncatewords:20 }}
+        </p>
+        {% endif %}
+        
+        <div class="course-info">
+            <div class="info-row">
+                <span class="info-label">Dars soatlari:</span>
+                <span class="info-value">{{ course.duration_hours }} soat</span>
+            </div>
+            {% if course.direction %}
+            <div class="info-row">
+                <span class="info-label">Yo'nalish:</span>
+                <span class="info-value">{{ course.direction.name }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="icon">📚</div>
+    <h3 style="color: #2d3748; margin-bottom: 10px;">Kurslar topilmadi</h3>
+    <p style="color: #718096;">Sizga hali kurslar tayinlanmagan.</p>
+</div>
+{% endif %}
+
+{% endblock %}

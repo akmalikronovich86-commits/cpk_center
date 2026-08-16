@@ -1,0 +1,290 @@
+{% extends "certificates/base_student.html" %}
+
+{% block title %}Mening sertifikatlarim{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    @media (max-width: 768px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+    }
+    .dashboard-widget {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .widget-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .widget-header h3 { color: #1e3a5f; font-size: 18px; margin: 0; }
+    .widget-header a { color: #667eea; text-decoration: none; font-size: 14px; font-weight: 600; }
+    .widget-header a:hover { text-decoration: underline; }
+    
+    .mini-schedule-item, .mini-announcement-item {
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f4f8;
+    }
+    .mini-schedule-item:last-child, .mini-announcement-item:last-child { border-bottom: none; }
+    
+    .mini-schedule-time { font-weight: 600; color: #1e3a5f; font-size: 14px; }
+    .mini-schedule-course { color: #4a5568; font-size: 14px; margin-top: 4px; }
+    
+    .mini-announcement-title { font-weight: 600; color: #1e3a5f; font-size: 14px; margin-bottom: 5px; }
+    .mini-announcement-date { font-size: 12px; color: #718096; }
+    
+    .welcome {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    .welcome h2 { font-size: 28px; margin-bottom: 10px; }
+    .welcome p { font-size: 16px; opacity: 0.9; }
+    
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .stat-card .number {
+        font-size: 36px;
+        font-weight: bold;
+        color: #1e3a5f;
+    }
+    .stat-card .label {
+        color: #718096;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+    
+    .certificate-list {
+        display: grid;
+        gap: 20px;
+    }
+    .certificate-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .certificate-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    .certificate-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .certificate-number {
+        font-size: 18px;
+        font-weight: bold;
+        color: #1e3a5f;
+    }
+    .certificate-status {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .status-issued { background: #c6f6d5; color: #22543d; }
+    .status-revoked { background: #fed7d7; color: #742a2a; }
+    .status-duplicate { background: #feebc8; color: #7c2d12; }
+    
+    .certificate-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    .info-label {
+        font-size: 12px;
+        color: #718096;
+        margin-bottom: 5px;
+    }
+    .info-value {
+        font-size: 14px;
+        color: #2d3748;
+        font-weight: 500;
+    }
+    
+    .certificate-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 10px;
+    }
+    .empty-state .icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+    .empty-state h3 {
+        color: #2d3748;
+        margin-bottom: 10px;
+    }
+    .empty-state p {
+        color: #718096;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="welcome">
+    <h2>Hurmatli {{ request.user.get_full_name|default:request.user.username }}!</h2>
+    <p>Sertifikatlaringizni ko'ring va yuklab oling</p>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="number">{{ certificates|length }}</div>
+        <div class="label">Jami sertifikatlar</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ active_count }}</div>
+        <div class="label">Amaldagi</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ revoked_count }}</div>
+        <div class="label">Bekor qilingan</div>
+    </div>
+</div>
+
+<!-- Новые виджеты: Расписание и Уведомления -->
+<div class="dashboard-grid">
+    <!-- Виджет расписания -->
+    <div class="dashboard-widget">
+        <div class="widget-header">
+            <h3>📅 Yaqin darslar</h3>
+            <a href="{% url 'certificates:student_schedule' %}">Barchasini ko'rish →</a>
+        </div>
+        {% if schedule_list %}
+            {% for schedule in schedule_list|slice:":3" %}
+            <div class="mini-schedule-item">
+                <div class="mini-schedule-time">
+                    {{ schedule.date_start|date:"d.m.Y" }} | {{ schedule.date_start|date:"H:i" }}
+                </div>
+                <div class="mini-schedule-course">{{ schedule.course.title }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: #718096; font-size: 14px; text-align: center; padding: 20px 0;">
+                Yaqin kunlarda darslar yo'q
+            </p>
+        {% endif %}
+    </div>
+
+    <!-- Виджет уведомлений -->
+    <div class="dashboard-widget">
+        <div class="widget-header">
+            <h3>🔔 So'nggi e'lonlar</h3>
+            <a href="{% url 'certificates:student_announcements' %}">Barchasini ko'rish →</a>
+        </div>
+        {% if announcements %}
+            {% for ann in announcements|slice:":3" %}
+            <div class="mini-announcement-item">
+                <div class="mini-announcement-title">{{ ann.title }}</div>
+                <div class="mini-announcement-date">{{ ann.created_at|date:"d.m.Y" }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: #718096; font-size: 14px; text-align: center; padding: 20px 0;">
+                Yangi e'lonlar yo'q
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+{% if certificates %}
+<div class="certificate-list">
+    {% for cert in certificates %}
+    <div class="certificate-card">
+        <div class="certificate-header">
+            <div class="certificate-number">📜 {{ cert.certificate_number }}</div>
+            <div class="certificate-status status-{{ cert.status }}">
+                {{ cert.get_status_display }}
+            </div>
+        </div>
+        
+        <div class="certificate-info">
+            <div class="info-item">
+                <span class="info-label">Kurs nomi</span>
+                <span class="info-value">{{ cert.course.title }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Kurs kodi</span>
+                <span class="info-value">{{ cert.course.code }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Dars soatlari</span>
+                <span class="info-value">{{ cert.course.duration_hours }} soat</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Berilgan sana</span>
+                <span class="info-value">{{ cert.issue_date|date:"d.m.Y" }}</span>
+            </div>
+            {% if cert.expiry_date %}
+            <div class="info-item">
+                <span class="info-label">Amal qilish muddati</span>
+                <span class="info-value">{{ cert.expiry_date|date:"d.m.Y" }}</span>
+            </div>
+            {% endif %}
+            <div class="info-item">
+                <span class="info-label">QR-kod</span>
+                <span class="info-value" style="font-family: monospace; font-size: 12px;">{{ cert.qr_code }}</span>
+            </div>
+        </div>
+        
+        <div class="certificate-actions">
+            <a href="{% url 'certificates:generate_pdf' cert.id %}" class="btn" target="_blank">
+                📄 PDF yuklash
+            </a>
+            <a href="{% url 'certificates:verify' cert.qr_code %}" class="btn btn-success" target="_blank">
+                🔍 Tekshirish
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="icon">📭</div>
+    <h3>Sertifikatlar topilmadi</h3>
+    <p>Sizda hali sertifikatlar yo'q. Administrator bilan bog'laning.</p>
+</div>
+{% endif %}
+{% endblock %}

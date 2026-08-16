@@ -1,25 +1,24 @@
 from django.shortcuts import redirect
 
+
 class AdminAccessMiddleware:
-    """Ограничение доступа к админке для аутентифицированных пользователей с правами staff"""
-    
+    """Ограничение доступа к админке: только staff, лекторы - в свой кабинет."""
+
+    STAFF_ROLES = {'admin', 'director', 'department_head', 'methodist'}
+
     def __init__(self, get_response):
         self.get_response = get_response
-    
+
     def __call__(self, request):
-        # Проверяем, если запрос к админке
         if request.path.startswith('/admin/'):
-            # Если пользователь не аутентифицирован
             if not request.user.is_authenticated:
                 return redirect('login')
-            
-            # Запрещаем доступ лекторам к админке
-            if hasattr(request.user, 'role') and request.user.role == 'lecturer':
+
+            role = getattr(request.user, 'role', None)
+            if role == 'lecturer':
                 return redirect('lecturers:lecturer_dashboard')
-            
-            # Для остальных - проверяем is_staff
-            if not request.user.is_staff:
+
+            if not (request.user.is_staff or request.user.is_superuser or role in self.STAFF_ROLES):
                 return redirect('login')
-        
-        response = self.get_response(request)
-        return response
+
+        return self.get_response(request)

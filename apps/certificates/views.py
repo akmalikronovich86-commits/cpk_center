@@ -1,10 +1,11 @@
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
-
-from fpdf import FPDF
 import os
+
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from fpdf import FPDF
+
 from .models import Certificate
 
 
@@ -17,13 +18,13 @@ class CertificatePDF(FPDF):
             '/usr/share/fonts/dejavu/DejaVuSans.ttf',
             '/usr/share/fonts/TTF/DejaVuSans.ttf',
         ]
-        
+
         font_path = None
         for path in font_paths:
             if os.path.exists(path):
                 font_path = path
                 break
-        
+
         if font_path:
             self.add_font('DejaVu', '', font_path, uni=True)
             self.add_font('DejaVu', 'B', font_path.replace('.ttf', '-Bold.ttf'), uni=True)
@@ -36,23 +37,31 @@ class CertificatePDF(FPDF):
 def generate_certificate_pdf(request, certificate_id):
     """Генерация PDF сертификата"""
     certificate = get_object_or_404(Certificate, id=certificate_id)
-    
+
+    # RBAC/IDOR-защита: сертификат видит только владелец или staff-роли
+    _staff_roles = {'admin', 'director', 'methodist', 'department_head'}
+    _is_staff_user = request.user.is_staff or request.user.is_superuser or request.user.role in _staff_roles
+    # Если StudentRecord связан с User другим полем - поправьте строку ниже
+    _is_owner = getattr(certificate.student, 'user_id', None) == request.user.id
+    if not (_is_staff_user or _is_owner):
+        raise PermissionDenied("Bu sertifikatga ruxsat yo'q")
+
     pdf = CertificatePDF()
     pdf.add_page()
     pdf.set_auto_page_break(False)
-    
+
     fn = pdf.font_name
-    
+
     # Рамка
     pdf.set_draw_color(30, 58, 95)
     pdf.set_line_width(2)
     pdf.rect(10, 10, 277, 190)
-    
+
     # Внутренняя рамка
     pdf.set_draw_color(201, 169, 97)
     pdf.set_line_width(0.5)
     pdf.rect(15, 15, 267, 180)
-    
+
     # Заголовок организации
     pdf.set_font(fn, 'B', 14)
     pdf.set_text_color(30, 58, 95)
@@ -60,32 +69,32 @@ def generate_certificate_pdf(request, certificate_id):
     pdf.cell(0, 10, 'XODIMLAR MALAKASINI OSHIRISH VA', 0, 1, 'C')
     pdf.cell(0, 10, 'QAYTA TAYYORLASH MARKAZI', 0, 1, 'C')
     pdf.ln(10)
-    
+
     # Заголовок СЕРТИФИКАТ
     pdf.set_font(fn, 'B', 36)
     pdf.set_text_color(30, 58, 95)
     pdf.cell(0, 20, 'SERTIFIKAT', 0, 1, 'C')
     pdf.ln(5)
-    
+
     # Подзаголовок
     pdf.set_font(fn, '', 14)
     pdf.set_text_color(100, 100, 100)
     pdf.cell(0, 10, 'Malaka oshirishni tasdiqlaydi', 0, 1, 'C')
     pdf.ln(10)
-    
+
     # Текст "Bu sertifikat berilgan"
     pdf.set_font(fn, '', 12)
     pdf.set_text_color(0, 0, 0)
     pdf.cell(0, 10, 'Bu sertifikat berilgan:', 0, 1, 'C')
     pdf.ln(5)
-    
+
     # Имя студента
     pdf.set_font(fn, 'B', 22)
     pdf.set_text_color(30, 58, 95)
     student_name = certificate.student.full_name or "Noma'lum"
     pdf.cell(0, 15, student_name, 0, 1, 'C')
     pdf.ln(5)
-    
+
     # Информация о курсе
     pdf.set_font(fn, '', 12)
     pdf.set_text_color(0, 0, 0)
@@ -93,18 +102,18 @@ def generate_certificate_pdf(request, certificate_id):
     pdf.cell(0, 10, f'"{course_title}" kursi bo\'yicha malaka oshirganligini tasdiqlaydi', 0, 1, 'C')
     pdf.cell(0, 10, f'Dars soatlari: {certificate.course.duration_hours} soat', 0, 1, 'C')
     pdf.ln(15)
-    
+
     # Даты
     pdf.set_font(fn, '', 11)
     issue_date = certificate.issue_date.strftime('%d.%m.%Y')
     expiry_date = certificate.expiry_date.strftime('%d.%m.%Y') if certificate.expiry_date else '5 yil'
-    
+
     y_pos = pdf.get_y()
     pdf.set_xy(20, y_pos)
     pdf.cell(120, 10, f'Berilgan sana: {issue_date}', 0, 0, 'L')
     pdf.cell(120, 10, f'Amal qilish muddati: {expiry_date}', 0, 1, 'R')
     pdf.ln(20)
-    
+
     # Подпись
     pdf.set_font(fn, '', 10)
     pdf.set_text_color(0, 0, 0)
@@ -112,40 +121,40 @@ def generate_certificate_pdf(request, certificate_id):
     pdf.cell(90, 5, '_____________________', 0, 1, 'C')
     pdf.cell(90, 5, '', 0, 0)
     pdf.cell(90, 5, 'Markaz direktori', 0, 1, 'C')
-    
+
     # Номер сертификата внизу
     pdf.set_font(fn, 'I', 9)
     pdf.set_text_color(150, 150, 150)
     pdf.set_xy(20, 195)
     pdf.cell(257, 5, f'Sertifikat raqami: {certificate.certificate_number}', 0, 0, 'R')
-    
+
     # QR-код справа внизу (если есть)
     if certificate.qr_image and os.path.exists(certificate.qr_image.path):
         try:
             pdf.image(certificate.qr_image.path, x=240, y=150, w=30)
-        except Exception as e:
+        except Exception:
             pass
-    
+
     # Вывод PDF
     pdf_output = pdf.output(dest='S')
     if isinstance(pdf_output, str):
         pdf_output = pdf_output.encode('latin-1')
-    
+
     response = HttpResponse(pdf_output, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="certificate_{certificate.certificate_number}.pdf"'
-    
+
     return response
 
 
 def verify_certificate(request, qr_code):
     """Страница проверки подлинности сертификата"""
     certificate = get_object_or_404(Certificate, qr_code=qr_code)
-    
+
     context = {
         'certificate': certificate,
         'is_valid': certificate.status == 'issued',
     }
-    
+
     return render(request, 'certificates/verify.html', context)
 
 
@@ -157,7 +166,7 @@ def smart_redirect(request):
 
         return redirect('login')
 
-    
+
 
     # Сначала проверяем конкретные роли
 
@@ -177,17 +186,17 @@ def smart_redirect(request):
 
     }
 
-    
+
 
     dashboard_url = role_dashboards.get(request.user.role)
 
-    
+
 
     if dashboard_url:
 
         return redirect(dashboard_url)
 
-    
+
 
     # Если роль не определена, но пользователь суперпользователь — в админку
 
@@ -195,7 +204,7 @@ def smart_redirect(request):
 
         return redirect('/admin/')
 
-    
+
 
     # По умолчанию — в кабинет студента
 
@@ -220,6 +229,7 @@ class CertificatePDF(FPDF):
 
 
 
+@login_required
 def student_dashboard(request):
     """Личный кабинет студента - сертификаты, расписание, уведомления"""
 
@@ -236,12 +246,14 @@ def student_dashboard(request):
         elif request.user.role == 'lecturer':
             return redirect('lecturers:lecturer_dashboard')
         return redirect('certificates:student_dashboard')
-    from .models import Certificate
-    from apps.groups.models import StudentRecord
-    from apps.courses.models import AcademicGroup
-    from apps.schedules.models import Schedule
     from django.utils import timezone
-    
+
+    from apps.courses.models import AcademicGroup
+    from apps.groups.models import StudentRecord
+    from apps.schedules.models import Schedule
+
+    from .models import Certificate
+
     # Получаем StudentRecord связанного пользователя
     try:
         student_record = StudentRecord.objects.get(user=request.user)
@@ -252,7 +264,7 @@ def student_dashboard(request):
     else:
         # Сертификаты
         certificates = Certificate.objects.filter(student=student_record).select_related('course').order_by('-issue_date')
-        
+
         # Расписание - ищем по названию группы
         schedule_list = []
         if student_record.group:
@@ -267,15 +279,15 @@ def student_dashboard(request):
                 ).order_by('date_start')[:10]
             except AcademicGroup.DoesNotExist:
                 pass
-        
+
         # Уведомления
         from .models import Announcement
         announcements = Announcement.objects.filter(is_active=True).order_by('-created_at')[:3]
-    
+
     # Статистика
     active_count = sum(1 for c in certificates if c.status == 'issued')
     revoked_count = sum(1 for c in certificates if c.status == 'revoked')
-    
+
     context = {
         'certificates': certificates,
         'active_count': active_count,
@@ -284,7 +296,7 @@ def student_dashboard(request):
         'announcements': announcements,
         'student_name': student_record.full_name if 'student_record' in locals() and student_record else request.user.get_full_name,
     }
-    
+
     return render(request, 'certificates/student_dashboard.html', context)
 
 
@@ -295,15 +307,16 @@ def student_materials(request):
     """Материалы для студента — только по его курсам"""
     from apps.groups.models import StudentRecord
     from apps.materials.models import Material
+
     from .models import Certificate
-    
+
     try:
         student_record = StudentRecord.objects.get(user=request.user)
         # Получаем курсы студента через его сертификаты
         student_courses = Certificate.objects.filter(
             student=student_record
         ).values_list('course_id', flat=True).distinct()
-        
+
         # Если есть курсы — фильтруем материалы по ним, иначе показываем все опубликованные
         if student_courses.exists():
             materials = Material.objects.filter(
@@ -318,7 +331,7 @@ def student_materials(request):
         materials = Material.objects.filter(
             is_published=True
         ).select_related('course').order_by('course__code', 'order', '-uploaded_at')
-    
+
     # Группируем материалы по курсу
     materials_by_course = {}
     for material in materials:
@@ -326,7 +339,7 @@ def student_materials(request):
         if course_key not in materials_by_course:
             materials_by_course[course_key] = []
         materials_by_course[course_key].append(material)
-    
+
     context = {
         'materials_by_course': materials_by_course,
         'total_count': materials.count(),
@@ -340,15 +353,16 @@ def student_materials(request):
 def student_zoom_recordings(request):
     """Zoom-записи для студента — только по его курсам"""
     from apps.groups.models import StudentRecord
-    from apps.zoom_integration.models import ZoomRecording, ZoomMeeting
+    from apps.zoom_integration.models import ZoomRecording
+
     from .models import Certificate
-    
+
     try:
         student_record = StudentRecord.objects.get(user=request.user)
         student_courses = Certificate.objects.filter(
             student=student_record
         ).values_list('course_id', flat=True).distinct()
-        
+
         if student_courses.exists():
             recordings = ZoomRecording.objects.filter(
                 meeting__course_id__in=student_courses,
@@ -362,7 +376,7 @@ def student_zoom_recordings(request):
         recordings = ZoomRecording.objects.filter(
             meeting__status='completed'
         ).select_related('meeting', 'meeting__course', 'meeting__teacher').order_by('-meeting__start_time')
-    
+
     context = {
         'recordings': recordings,
         'total_count': recordings.count(),
@@ -375,9 +389,9 @@ def student_zoom_recordings(request):
 
 def change_password(request):
     """Изменение пароля студентом"""
-    from django.contrib.auth.forms import PasswordChangeForm
     from django.contrib import messages
-    
+    from django.contrib.auth.forms import PasswordChangeForm
+
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
@@ -389,7 +403,7 @@ def change_password(request):
             messages.error(request, 'Xatolik. Qaytadan urinib ko\'ring.')
     else:
         form = PasswordChangeForm(request.user)
-    
+
     return render(request, 'certificates/change_password.html', {'form': form})
 
 
@@ -410,28 +424,30 @@ def director_dashboard(request):
         elif request.user.role == 'lecturer':
             return redirect('lecturers:lecturer_dashboard')
         return redirect('certificates:student_dashboard')
-    from django.utils import timezone
     from datetime import timedelta
-    from django.db.models import Avg, Count, Q
-    from apps.users.models import User
-    from apps.groups.models import StudentRecord
-    from apps.courses.models import Course, Enrollment
+
+    from django.db.models import Count
+    from django.utils import timezone
+
     from apps.certificates.models import Certificate
-    from apps.schedules.models import Schedule, Attendance
-    from apps.zoom_integration.models import ZoomMeeting
+    from apps.courses.models import Course
+    from apps.groups.models import StudentRecord
     from apps.materials.models import Material
-    
+    from apps.schedules.models import Schedule
+    from apps.users.models import User
+    from apps.zoom_integration.models import ZoomMeeting
+
     today = timezone.now().date()
     now = timezone.now()
     month_start = today.replace(day=1)
     year_start = today.replace(month=1, day=1)
-    
+
     # ===== KPI МЕТРИКИ =====
     total_students = StudentRecord.objects.count()
     active_students = User.objects.filter(role='student', is_active=True).count()
     active_courses = Course.objects.count()
     total_lecturers = User.objects.filter(role='lecturer', is_active=True).count()
-    
+
     # Сертификаты
     total_certificates = Certificate.objects.count()
     try:
@@ -442,24 +458,24 @@ def director_dashboard(request):
         certs_this_year = Certificate.objects.filter(created_at__year=today.year).count()
     except Exception:
         certs_this_year = 0
-    
+
     # ===== ТРЕБУЕТ ВНИМАНИЯ =====
     alerts = []
-    
+
     # Занятия на сегодня
     today_schedules = Schedule.objects.filter(date=today).count() if hasattr(Schedule, 'date') else 0
-    
+
     # Ближайшие Zoom встречи
     upcoming_zoom = ZoomMeeting.objects.filter(
         start_time__gte=now,
         start_time__lte=now + timedelta(hours=24),
         status='scheduled'
     ).count()
-    
+
     # Опубликованные материалы
     published_materials = Material.objects.filter(is_published=True).count()
     unpublished_materials = Material.objects.filter(is_published=False).count()
-    
+
     if unpublished_materials > 5:
         alerts.append({
             'type': 'warning',
@@ -467,7 +483,7 @@ def director_dashboard(request):
             'title': 'Nashr etilmagan materiallar',
             'message': f'{unpublished_materials} ta material nashrni kutmoqda',
         })
-    
+
     if today_schedules == 0:
         alerts.append({
             'type': 'info',
@@ -475,10 +491,10 @@ def director_dashboard(request):
             'title': 'Bugun darslar yo\'q',
             'message': 'Jadvalni tekshiring',
         })
-    
+
     # ===== АКТИВНЫЕ КУРСЫ =====
     courses = Course.objects.all()[:10]
-    
+
     # ===== ТОП ПРЕПОДАВАТЕЛЕЙ (по количеству материалов и встреч) =====
     top_lecturers = User.objects.filter(
         role='lecturer',
@@ -487,13 +503,13 @@ def director_dashboard(request):
         materials_count=Count('uploaded_materials'),
         meetings_count=Count('zoom_meetings')
     ).order_by('-materials_count', '-meetings_count')[:5]
-    
+
     # ===== БЛИЖАЙШИЕ ЗАНЯТИЯ =====
     upcoming_schedules = ZoomMeeting.objects.filter(
         start_time__gte=now,
         status='scheduled'
     ).select_related('course', 'teacher').order_by('start_time')[:5]
-    
+
     # ===== ДИНАМИКА ПО МЕСЯЦАМ (сертификаты за последние 6 месяцев) =====
     monthly_stats = []
     for i in range(5, -1, -1):
@@ -503,7 +519,7 @@ def director_dashboard(request):
             month_end_dt = month_date.replace(year=month_date.year+1, month=1, day=1)
         else:
             month_end_dt = month_date.replace(month=month_date.month+1, day=1)
-        
+
         try:
             count = Certificate.objects.filter(
                 created_at__gte=month_start_dt,
@@ -518,9 +534,9 @@ def director_dashboard(request):
                 'month': month_date.strftime('%b'),
                 'count': 0,
             })
-    
+
     max_monthly = max([s['count'] for s in monthly_stats]) if monthly_stats else 1
-    
+
     context = {
         # KPI
         'total_students': total_students,
@@ -530,7 +546,7 @@ def director_dashboard(request):
         'total_certificates': total_certificates,
         'certs_this_month': certs_this_month,
         'certs_this_year': certs_this_year,
-        
+
         # Данные
         'alerts': alerts,
         'courses': courses,
@@ -538,7 +554,7 @@ def director_dashboard(request):
         'upcoming_schedules': upcoming_schedules,
         'monthly_stats': monthly_stats,
         'max_monthly': max_monthly or 1,
-        
+
         # Дополнительно
         'today_schedules': today_schedules,
         'upcoming_zoom': upcoming_zoom,
@@ -567,42 +583,44 @@ def methodist_dashboard(request):
         elif request.user.role == 'lecturer':
             return redirect('lecturers:lecturer_dashboard')
         return redirect('certificates:student_dashboard')
-    from django.utils import timezone
     from datetime import timedelta
-    from django.db.models import Count, Avg, Q
-    from apps.users.models import User
-    from apps.groups.models import StudentRecord
+
+    from django.db.models import Count, Q
+    from django.utils import timezone
+
     from apps.courses.models import Course, Enrollment
-    from apps.schedules.models import Schedule, Attendance
-    
+    from apps.groups.models import StudentRecord
+    from apps.schedules.models import Attendance, Schedule
+    from apps.users.models import User
+
     today = timezone.now().date()
     now = timezone.now()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
-    
+
     # ===== KPI МЕТРИКИ =====
     total_students = StudentRecord.objects.count()
     active_students = User.objects.filter(role='student', is_active=True).count()
     total_lecturers = User.objects.filter(role='lecturer', is_active=True).count()
     total_courses = Course.objects.count()
     total_enrollments = Enrollment.objects.count()
-    
+
     # Расписание
     total_schedules = Schedule.objects.count()
     today_schedules = Schedule.objects.filter(
         date_start__date=today
     ).count()
-    
+
     # Посещаемость
     total_attendance = Attendance.objects.count()
     present_count = Attendance.objects.filter(status='present').count()
     absent_count = Attendance.objects.filter(status='absent').count()
     late_count = Attendance.objects.filter(status='late').count()
     attendance_rate = (present_count / total_attendance * 100) if total_attendance > 0 else 0
-    
+
     # ===== АЛЕРТЫ =====
     alerts = []
-    
+
     # Занятия без отметки посещаемости
     schedules_without_attendance = Schedule.objects.filter(
         date_start__date=today,
@@ -610,7 +628,7 @@ def methodist_dashboard(request):
     ).exclude(
         id__in=Attendance.objects.values_list('schedule_id', flat=True)
     ).count()
-    
+
     if schedules_without_attendance > 0:
         alerts.append({
             'type': 'warning',
@@ -618,7 +636,7 @@ def methodist_dashboard(request):
             'title': 'Davomat belgilanmagan',
             'message': f'{schedules_without_attendance} ta dars uchun davomat belgilanmagan',
         })
-    
+
     # Низкая посещаемость
     if attendance_rate < 70:
         alerts.append({
@@ -627,17 +645,17 @@ def methodist_dashboard(request):
             'title': 'Past davomat',
             'message': f'Davomat {attendance_rate:.1f}% - 70% dan past',
         })
-    
+
     # ===== БЛИЖАЙШИЕ ЗАНЯТИЯ =====
     upcoming_schedules = Schedule.objects.filter(
         date_start__gte=now
     ).select_related('course', 'group', 'lecturer').order_by('date_start')[:10]
-    
+
     # ===== ПОСЛЕДНЯЯ ПОСЕЩАЕМОСТЬ =====
     recent_attendance = Attendance.objects.filter(
         schedule__date_start__date__gte=today - timedelta(days=7)
     ).select_related('student', 'schedule', 'schedule__course').order_by('-marked_at')[:20]
-    
+
     # ===== СТАТИСТИКА ПО ГРУППАМ =====
     group_stats = Enrollment.objects.filter(
         is_active=True
@@ -647,7 +665,7 @@ def methodist_dashboard(request):
     ).annotate(
         student_count=Count('student')
     ).order_by('-student_count')[:10]
-    
+
     # ===== ТОП СТУДЕНТОВ ПО ПОСЕЩАЕМОСТИ =====
     top_students = User.objects.filter(
         role='student',
@@ -657,7 +675,7 @@ def methodist_dashboard(request):
         attendance_count=Count('attendances', filter=Q(attendances__status='present')),
         total_attendance=Count('attendances')
     ).order_by('-attendance_count')[:10]
-    
+
     context = {
         # KPI
         'total_students': total_students,
@@ -672,7 +690,7 @@ def methodist_dashboard(request):
         'absent_count': absent_count,
         'late_count': late_count,
         'attendance_rate': round(attendance_rate, 1),
-        
+
         # Данные
         'alerts': alerts,
         'upcoming_schedules': upcoming_schedules,
@@ -680,7 +698,7 @@ def methodist_dashboard(request):
         'group_stats': group_stats,
         'top_students': top_students,
         'schedules_without_attendance': schedules_without_attendance,
-        
+
         # Дополнительно
         'today': today,
         'week_start': week_start,
@@ -718,20 +736,20 @@ def lecturer_dashboard(request):
 
 def student_schedule(request):
     """Расписание занятий студента с материалами и прогрессом"""
-    from apps.groups.models import StudentRecord
+
     from apps.courses.models import AcademicGroup
-    from apps.schedules.models import Schedule, Attendance
+    from apps.groups.models import StudentRecord
     from apps.materials.models import Material
-    from django.utils import timezone
-    
+    from apps.schedules.models import Attendance, Schedule
+
     schedule_list = []
     student_group_name = None
     course_progress = {}
-    
+
     try:
         student_record = StudentRecord.objects.get(user=request.user)
         student_group_name = student_record.group
-        
+
         if student_record.group:
             try:
                 academic_group = AcademicGroup.objects.get(name=student_record.group)
@@ -739,7 +757,7 @@ def student_schedule(request):
                     group=academic_group,
                     status='published'
                 ).order_by('date_start')
-                
+
                 # Для каждого расписания добавляем материалы и посещаемость
                 for schedule in schedule_list:
                     # Материалы по курсу
@@ -747,14 +765,14 @@ def student_schedule(request):
                         course=schedule.course,
                         is_published=True
                     ).order_by('-uploaded_at')[:5]
-                    
+
                     # Посещаемость студента
                     attendance = Attendance.objects.filter(
                         schedule=schedule,
                         student=request.user
                     ).first()
                     schedule.attendance_status = attendance.get_status_display() if attendance else 'Belgilanmagan'
-                
+
                 # Прогресс по курсам
                 courses = schedule_list.values_list('course', flat=True).distinct()
                 for course_id in courses:
@@ -770,18 +788,18 @@ def student_schedule(request):
                         'attended': attended,
                         'progress': round(progress, 1)
                     }
-                    
+
             except AcademicGroup.DoesNotExist:
                 pass
     except StudentRecord.DoesNotExist:
         pass
-    
+
     context = {
         'schedule_list': schedule_list,
         'student_group_name': student_group_name,
         'course_progress': course_progress,
     }
-    
+
     return render(request, 'certificates/student_schedule.html', context)
 
 
@@ -791,23 +809,23 @@ def student_schedule(request):
 def student_announcements(request):
     """Уведомления/объявления для студента"""
     from .models import Announcement
-    
+
     announcements = Announcement.objects.filter(is_active=True).order_by('-created_at')
-    
+
     context = {
         'announcements': announcements,
         'student_name': student_record.full_name if 'student_record' in locals() and student_record else request.user.get_full_name,
     }
-    
+
     return render(request, 'certificates/student_announcements.html', context)
 
 
 @login_required
 def student_results(request):
     """Результаты/прогресс слушателя по аттестации"""
-    from apps.groups.models import StudentRecord
     from apps.assessments.models import AssessmentRecord
-    
+    from apps.groups.models import StudentRecord
+
     # Получаем StudentRecord связанного пользователя
     try:
         student_record = StudentRecord.objects.get(user=request.user)
@@ -817,12 +835,12 @@ def student_results(request):
             'student_name': request.user.get_full_name() or request.user.username,
         }
         return render(request, 'certificates/student_results.html', context)
-    
+
     # Получаем записи аттестации для всех групп студента
     assessment_records = AssessmentRecord.objects.filter(
         student=request.user
     ).select_related('group', 'group__course').order_by('-updated_at')
-    
+
     # Для каждой записи подготавливаем данные для отображения
     results = []
     for record in assessment_records:
@@ -835,7 +853,7 @@ def student_results(request):
             'status_color': 'success' if record.certificate_approved else ('info' if record.eligible_for_certificate else 'secondary'),
         }
         results.append(result_data)
-    
+
     context = {
         'student_record': student_record,
         'results': results,
@@ -843,5 +861,5 @@ def student_results(request):
         'attendance_threshold': AssessmentRecord.ATTENDANCE_THRESHOLD,
         'exam_threshold': AssessmentRecord.EXAM_THRESHOLD,
     }
-    
+
     return render(request, 'certificates/student_results.html', context)

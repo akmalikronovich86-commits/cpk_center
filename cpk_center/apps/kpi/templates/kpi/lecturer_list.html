@@ -1,0 +1,41 @@
+{% extends "certificates/base_student.html" %}
+{% block title %}Ma'ruzachilar{% endblock %}
+{% block content %}
+<a href="javascript:history.back()" style="display: inline-flex; align-items: center; gap: 8px; color: #4a5568; text-decoration: none; font-weight: 600; margin-bottom: 15px; padding: 8px 16px; background: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0; transition: all 0.2s;" onmouseover="this.style.background='#edf2f7'" onmouseout="this.style.background='#f7fafc'">️ Ortga</a>
+
+<div style="padding: 30px;">
+    <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="color: #1e3a5f; margin: 0;">👨‍🏫 Ma'ruzachilar</h2>
+            <a href="{% url 'kpi:lecturer_create' %}" style="background: #2c5282; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">➕ Yangi ma'ruzachi</a>
+        </div>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f7fafc;">
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">FIO</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Mutaxassislik</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Tajriba (yil)</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Amallar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lecturer in lecturers %}
+                    <tr style="border-bottom: 1px solid #edf2f7;">
+                        <td style="padding: 12px;">{{ lecturer.user.get_full_name|default:lecturer.user.username }}</td>
+                        <td style="padding: 12px;">{{ lecturer.specialization|default:"-" }}</td>
+                        <td style="padding: 12px;">{{ lecturer.experience_years }}</td>
+                        <td style="padding: 12px;">
+                            <a href="{% url 'kpi:lecturer_update' lecturer.id %}" style="color: #4299e1; margin-right: 10px;">️</a>
+                            <a href="{% url 'kpi:lecturer_delete' lecturer.id %}" style="color: #e53e3e;">🗑️</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="padding: 20px; text-align: center; color: #718096;">Hozircha ma'ruzachilar yo'q</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

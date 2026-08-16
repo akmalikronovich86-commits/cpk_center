@@ -1,7 +1,7 @@
-from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
+
 from apps.groups.models import StudentRecord
-from django.db.models import Q
 
 User = get_user_model()
 

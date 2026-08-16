@@ -1,0 +1,31 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} | {{ site_title|default:'Django site admin' }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:'Xodimlar Malakasini oshirish va Qayta tayyorlash Markazi' }}</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block usertools %}
+<div id="user-tools">
+    {% if request.user.is_authenticated %}
+        <span>Xush kelibsiz, <strong>{{ request.user.get_full_name|default:request.user.username }}</strong></span>
+        
+        {% if request.user.is_superuser and request.user.role != 'admin' %}
+        <a href="/" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 6px 14px; border-radius: 6px; text-decoration: none; margin-right: 10px; font-weight: 600; display: inline-block;">
+            🏠 Shaxsiy kabinet
+        </a>
+        {% endif %}
+        
+        {% if user.has_usable_password %}
+            <a href="{% url 'admin:password_change' %}">Parolni o'zgartirish</a> /
+        {% endif %}
+        <form id="logout-form" method="post" action="{% url 'admin:logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" style="background:none; border:none; color:#417690; cursor:pointer; text-decoration:underline; padding:0;">Chiqish</button>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

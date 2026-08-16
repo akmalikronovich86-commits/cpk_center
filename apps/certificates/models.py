@@ -1,11 +1,12 @@
-from django.db import models
-from django.utils import timezone
 import secrets
+
+from django.db import models, transaction
+from django.utils import timezone
 
 
 class Announcement(models.Model):
     """E'lonlar - tinglovchilar uchun xabarlar"""
-    
+
     title = models.CharField(
         max_length=255,
         verbose_name="Sarlavha"
@@ -28,12 +29,12 @@ class Announcement(models.Model):
         blank=True,
         verbose_name="Yaratgan"
     )
-    
+
     class Meta:
         verbose_name = "E'lon"
         verbose_name_plural = "E'lonlar"
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return self.title
 
@@ -171,23 +172,23 @@ class Certificate(models.Model):
         super().save(*args, **kwargs)
 
     def _generate_number(self):
-        """Sertifikat raqamini avtomatik generatsiya qilish"""
+        """Атомарная генерация номера: без гонок при параллельных запросах."""
         year = timezone.now().year
         prefix = f'CERT-{year}-'
-        last_cert = Certificate.objects.filter(
-            certificate_number__startswith=prefix
-        ).order_by('-certificate_number').first()
-
-        if last_cert and last_cert.certificate_number:
-            try:
-                last_num = int(last_cert.certificate_number.split('-')[-1])
-                new_num = last_num + 1
-            except (ValueError, IndexError):
-                new_num = 1
-        else:
+        with transaction.atomic():
+            last_cert = (
+                Certificate.objects.select_for_update()
+                .filter(certificate_number__startswith=prefix)
+                .order_by('-id')
+                .first()
+            )
             new_num = 1
-
-        return f'{prefix}{new_num:05d}'
+            if last_cert and last_cert.certificate_number:
+                try:
+                    new_num = int(last_cert.certificate_number.split('-')[-1]) + 1
+                except (ValueError, IndexError):
+                    new_num = 1
+            return f'{prefix}{new_num:05d}'
 
     def _generate_qr_code(self):
         """Unikal QR-kod generatsiya qilish"""

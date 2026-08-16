@@ -1,6 +1,5 @@
-from django.db import models
-from apps.directions.models import Direction
 from django.contrib.auth.models import AbstractUser
+from django.db import models
 
 
 class User(AbstractUser):
@@ -12,7 +11,7 @@ class User(AbstractUser):
         ('lecturer', "Ma'ruzachi"),
         ('student', 'Tinglovchi'),
     ]
-    
+
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student', verbose_name= "Rol")
     phone = models.CharField(max_length=20, blank=True, null=True, verbose_name= "Telefon raqami")
     patronymic = models.CharField(max_length=100, blank=True, null=True, verbose_name= "Otasining ismi")
@@ -32,7 +31,7 @@ class User(AbstractUser):
             parts = full.split(None, 1)
             self.first_name = parts[0]
             self.last_name = parts[1] if len(parts) > 1 else ""
-        
+
         # Если есть Имя/Фамилия, но нет Full Name -> Собираем
         elif not full and (fn or ln):
             self.full_name = f"{fn} {ln}".strip()
@@ -40,12 +39,13 @@ class User(AbstractUser):
         super().save(*args, **kwargs)
 
     class Meta:
-        verbose_name =  'Avtorizatsiyalangan foydalanuvchi  '
+        verbose_name = 'Avtorizatsiyalangan foydalanuvchi'
         verbose_name_plural = "Avtorizatsiyadan o'tgan foydalanuvchilar"
         app_label = 'users'
 
     def __str__(self):
-        return self.username
+        spec = self.specialization or "Ma'ruzachi"
+        return f"{self.user.username} - {spec}"
 
 
 class LecturerProfile(models.Model):
@@ -61,14 +61,15 @@ class LecturerProfile(models.Model):
         verbose_name_plural = "Ma'ruzachilar"
 
     def __str__(self):
-        return f"{self.user.username} - {self.specialization or 'Ma\'ruzachi'}"
+        spec = self.specialization or "Ma'ruzachi"
+        return f"{self.user.username} - {spec}"
 
 
 class Module(models.Model):
     name = models.CharField(max_length=200, verbose_name= 'Modul nomi')
     description = models.TextField(blank=True, null=True, verbose_name= 'Tavsif')
     hours = models.IntegerField(default=0, null=True, blank=True, verbose_name= 'Soatlar')
-    
+
     MODULE_TYPE_CHOICES = [
         ('nazariy', 'Nazariy'),
         ('amaliy', 'Amaliy'),
@@ -77,7 +78,7 @@ class Module(models.Model):
     is_active = models.BooleanField(default=True, verbose_name= 'Faol')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name= 'Yaratilgan sana')
     updated_at = models.DateTimeField(auto_now=True, verbose_name= 'Yangilangan sana')
-    
+
     directions = models.ManyToManyField('directions.Direction', blank=True, verbose_name= "Yo'nalishlar", related_name='modules')
     lecturers = models.ManyToManyField('users.LecturerProfile', blank=True, verbose_name= "Ma'ruzachilar", related_name='taught_modules')
 
@@ -106,7 +107,7 @@ class StudentProfile(models.Model):
     final_grade = models.CharField(max_length=50, blank=True, null=True, verbose_name= "Yakuniy bahosi")
     independent_study_topic = models.TextField(blank=True, null=True, verbose_name= "Mustaqil ta'lim mavzusi")
     qualification_period = models.CharField(max_length=50, blank=True, null=True, verbose_name= "Malaka oshirish muddati")
-    
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name= "Yaratilgan sana")
     updated_at = models.DateTimeField(auto_now=True, verbose_name= "Yangilangan sana")
 

@@ -1,0 +1,279 @@
+{% extends "lecturers/base_lecturer.html" %}
+
+{% block title %}Imtihon natijalari - {{ group.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .group-info {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .group-info h3 {
+        color: #1e3a5f;
+        margin-bottom: 15px;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    .info-label {
+        font-size: 12px;
+        color: #718096;
+        margin-bottom: 5px;
+    }
+    .info-value {
+        font-size: 14px;
+        color: #2d3748;
+        font-weight: 600;
+    }
+    .results-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    thead {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        color: white;
+    }
+    th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 14px;
+    }
+    tr:hover {
+        background: #f7fafc;
+    }
+    .score-input {
+        width: 80px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #cbd5e0;
+        font-size: 14px;
+        text-align: center;
+    }
+    .score-input:focus {
+        outline: none;
+        border-color: #4299e1;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .status-passed { background: #c6f6d5; color: #22543d; }
+    .status-failed { background: #fed7d7; color: #742a2a; }
+    .status-pending { background: #feebc8; color: #7c2d12; }
+    .status-eligible { background: #bee3f8; color: #2c5282; }
+    .actions {
+        margin-top: 20px;
+        text-align: center;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+    .btn-save {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        padding: 12px 30px;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .btn-save:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(72, 187, 120, 0.3);
+    }
+    .btn-back {
+        background: #718096;
+        color: white;
+        padding: 12px 30px;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    .btn-back:hover {
+        background: #4a5568;
+    }
+    .help-text {
+        background: #ebf8ff;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        color: #2c5282;
+        font-size: 14px;
+        border-left: 4px solid #4299e1;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>
+        <span>📝</span>
+        <span>Imtihon natijalari</span>
+    </h2>
+    <div class="page-nav">
+        <a href="{% url 'lecturers:lecturer_exam_results' %}" class="btn" style="background: #718096;">
+            ← Orqaga
+        </a>
+    </div>
+</div>
+
+<!-- Guruh haqida ma'lumot -->
+<div class="group-info">
+    <h3>{{ group.name }}</h3>
+    <div class="info-grid">
+        <div class="info-item">
+            <span class="info-label">Kurs</span>
+            <span class="info-value">{{ group.course.title }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Kurs kodi</span>
+            <span class="info-value">{{ group.course.code }}</span>
+        </div>
+        {% if group.start_date %}
+        <div class="info-item">
+            <span class="info-label">Boshlanish sanasi</span>
+            <span class="info-value">{{ group.start_date|date:"d.m.Y" }}</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Yordam matni -->
+<div class="help-text">
+    <strong>📌 Eslatma:</strong> Imtihon natijalarini foizda kiriting (0-100). 
+    O'tish chegarasi: <strong>70%</strong>. 
+    Qayta topshirish natijalari faqat Direktor tomonidan ruxsat berilgan tinglovchilar uchun kiritiladi.
+</div>
+
+{% if student_results %}
+<form method="post" action="{% url 'lecturers:save_exam_results' group.id %}">
+    {% csrf_token %}
+    <div class="results-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Tinglovchi</th>
+                    <th>Qatnashish %</th>
+                    <th>Imtihon %</th>
+                    <th>Qayta topshirish %</th>
+                    <th>Holat</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in student_results %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <strong>{{ item.student_record.full_name }}</strong>
+                        <input type="hidden" name="student_ids[]" value="{{ item.user.id }}">
+                    </td>
+                    <td>
+                        {% if item.assessment.attendance_percentage %}
+                            <span style="font-weight: 600; color: {% if item.assessment.attendance_passed %}#38a169{% else %}#e53e3e{% endif %};">
+                                {{ item.assessment.attendance_percentage }}%
+                            </span>
+                        {% else %}
+                            <span style="color: #a0aec0;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <input 
+                            type="number" 
+                            name="exam_score_{{ item.user.id }}" 
+                            class="score-input" 
+                            min="0" 
+                            max="100" 
+                            step="0.01"
+                            value="{% if item.assessment.exam_score %}{{ item.assessment.exam_score }}{% endif %}"
+                            placeholder="0-100"
+                        >
+                    </td>
+                    <td>
+                        {% if item.assessment.retake_allowed %}
+                            <input 
+                                type="number" 
+                                name="retake_score_{{ item.user.id }}" 
+                                class="score-input" 
+                                min="0" 
+                                max="100" 
+                                step="0.01"
+                                value="{% if item.assessment.retake_score %}{{ item.assessment.retake_score }}{% endif %}"
+                                placeholder="0-100"
+                            >
+                        {% else %}
+                            <span style="color: #a0aec0;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.assessment.certificate_approved %}
+                            <span class="status-badge status-passed">✅ Sertifikat tasdiqlandi</span>
+                        {% elif item.assessment.eligible_for_certificate %}
+                            <span class="status-badge status-eligible">🎓 Sertifikatga tayyor</span>
+                        {% elif item.assessment.exam_passed or item.assessment.retake_passed %}
+                            <span class="status-badge status-passed">✅ Imtihon topshirildi</span>
+                        {% elif item.assessment.exam_score %}
+                            <span class="status-badge status-failed">❌ Yiqildi</span>
+                        {% else %}
+                            <span class="status-badge status-pending">⏳ Natija yo'q</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="actions">
+        <a href="{% url 'lecturers:lecturer_exam_results' %}" class="btn-back">
+            ← Bekor qilish
+        </a>
+        <button type="submit" class="btn-save">
+            💾 Saqlash
+        </button>
+    </div>
+</form>
+{% else %}
+<div class="empty-state">
+    <h3 style="color: #2d3748; margin-bottom: 10px;">Tinglovchilar topilmadi</h3>
+    <p>Bu guruhda tinglovchilar mavjud emas.</p>
+</div>
+{% endif %}
+
+{% endblock %}

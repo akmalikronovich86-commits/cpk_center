@@ -1,0 +1,10 @@
+from django.contrib import admin
+
+# ---------- Admin для User (Foydalanuvchilar) ----------
+@admin.register(User)
+class CustomUserAdmin(admin.ModelAdmin):
+    list_display = ("username", "full_name", "email", "role", "is_active")
+    list_filter = ()
+    search_fields = ("username", "full_name", "email")
+    ordering = ("-date_joined",)
+

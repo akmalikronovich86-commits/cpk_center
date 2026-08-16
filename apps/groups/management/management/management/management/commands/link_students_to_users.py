@@ -1,7 +1,8 @@
-from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from apps.groups.models import StudentRecord
+from django.core.management.base import BaseCommand
 from django.db.models import Q
+
+from apps.groups.models import StudentRecord
 
 User = get_user_model()
 
@@ -42,10 +43,10 @@ class Command(BaseCommand):
             if record.phone:
                 # Очищаем телефон от пробелов и дефисов для поиска
                 clean_phone = record.phone.replace(' ', '').replace('-', '').replace('.', '')
-                
+
                 # Ищем по точному совпадению
                 user = User.objects.filter(phone=record.phone).first()
-                
+
                 # Если не нашли, ищем по очищенному телефону
                 if not user:
                     users_with_phone = User.objects.filter(phone__isnull=False)
@@ -58,7 +59,7 @@ class Command(BaseCommand):
             # 2. Если не нашли по phone, ищем по full_name
             if not user and record.full_name:
                 user = User.objects.filter(full_name=record.full_name).first()
-                
+
                 # Если не нашли точное совпадение, ищем по частичному
                 if not user:
                     user = User.objects.filter(
@@ -81,7 +82,7 @@ class Command(BaseCommand):
                         # Создаём username из passport или phone
                         username = record.passport or record.phone or f'student_{record.id}'
                         username = username.replace(' ', '').lower()
-                        
+
                         # Проверяем уникальность username
                         base_username = username
                         counter = 1
@@ -111,10 +112,10 @@ class Command(BaseCommand):
                             role='student',
                             password='changeme123'  # Временный пароль
                         )
-                        
+
                         record.user = user
                         record.save()
-                    
+
                     created_count += 1
                     self.stdout.write(
                         self.style.SUCCESS(f'✓ Создан и связан: {record.full_name} → {user.username}')
@@ -127,7 +128,7 @@ class Command(BaseCommand):
 
         # Итоговая статистика
         self.stdout.write(self.style.SUCCESS('\n' + '='*50))
-        self.stdout.write(self.style.SUCCESS(f'ИТОГО:'))
+        self.stdout.write(self.style.SUCCESS('ИТОГО:'))
         self.stdout.write(self.style.SUCCESS(f'  Связано: {linked_count}'))
         if create_users:
             self.stdout.write(self.style.SUCCESS(f'  Создано: {created_count}'))
