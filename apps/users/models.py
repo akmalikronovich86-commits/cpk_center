@@ -45,8 +45,7 @@ class User(AbstractUser):
         app_label = 'users'
 
     def __str__(self):
-        spec = self.specialization or "Ma'ruzachi"
-        return f"{self.user.username} - {spec}"
+        return self.username
 
 
 class LecturerProfile(models.Model):
