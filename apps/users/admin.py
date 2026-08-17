@@ -6,9 +6,9 @@ from .models import User
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ('username', 'full_name', 'phone', 'email', 'role', 'is_active')
+    list_display = ('username', 'full_name', 'phone', 'email', 'role', 'telegram_user_id', 'is_active')
     list_filter = ('role', 'is_active', 'is_staff')
-    search_fields = ('username', 'full_name', 'email', 'phone')
+    search_fields = ('username', 'full_name', 'email', 'phone', 'telegram_user_id')
     ordering = ('username',)
 
     fieldsets = (
@@ -20,6 +20,7 @@ class UserAdmin(BaseUserAdmin):
                 'email',
                 'full_name',
                 'phone',
+                'telegram_user_id',
                 'position'
             )
         }),
