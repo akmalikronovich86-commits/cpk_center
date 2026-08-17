@@ -1,6 +1,6 @@
 {% if widget.is_initial %}
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 0;">
-        <!-- Текущий файл -->
+        <!-- Joriy fayl -->
         <div style="display: flex; align-items: center; gap: 6px;">
             <span style="color: #666; font-size: 13px;">Hozirda:</span>
             <a href="{{ widget.value.url }}" target="_blank" style="color: #417690; text-decoration: none; font-size: 13px; font-weight: 500;">
@@ -8,13 +8,13 @@
             </a>
         </div>
         
-        <!-- Чекбокс "Aniq" -->
+        <!-- "Aniq" belgisi -->
         <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; margin-left: 8px;">
             <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}" style="margin: 0;">
             <span style="color: #dc3545; font-size: 12px;">Aniq</span>
         </label>
         
-        <!-- Кнопка обновления -->
+        <!-- Yangilash tugmasi -->
         <button type="button" onclick="document.getElementById('{{ widget.attrs.id }}').click()" 
                 style="background: #417690; color: white; border: none; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;"
                 onmouseover="this.style.background='#325b70'; this.style.transform='translateY(-1px)'" 

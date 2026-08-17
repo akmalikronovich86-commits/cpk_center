@@ -26,7 +26,7 @@ class AttendanceToken(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Yaratilgan')
     expires_at = models.DateTimeField(verbose_name='Amal qilish muddati')
-    secret = models.CharField(max_length=32, default=secrets.token_urlsafe, verbose_name='Maxfiy kalit')
+    secret = models.CharField(max_length=64, default=secrets.token_urlsafe, verbose_name='Maxfiy kalit')
 
     class Meta:
         verbose_name = "Davomat QR tokeni"

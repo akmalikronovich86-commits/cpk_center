@@ -3,7 +3,7 @@
 {% block content %}
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. Кнопка Statistika в правой панели
+        // 1. O'ng paneldagi Statistika tugmasi
         var filterPanel = document.getElementById('changelist-filter');
         if (filterPanel) {
             var existingButton = filterPanel.querySelector('a[href="/groups/statistics/"]');
@@ -24,7 +24,7 @@
             }
         }
         
-        // 2. Корректная нумерация T/R
+        // 2. T/R ni to'g'ri raqamlash
         var tbody = document.querySelector('#result_list tbody');
         if (tbody) {
             tbody.querySelectorAll('tr').forEach(function(row, i) {

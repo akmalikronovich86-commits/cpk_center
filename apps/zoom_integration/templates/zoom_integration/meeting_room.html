@@ -54,14 +54,14 @@
 <script src="{% static 'zoom_integration/js/ZoomMeetingApp.js' %}"></script>
 
 <script>
-    // Инициализация приложения
+    // Ishga tushirish приложения
     window.addEventListener('DOMContentLoaded', () => {
         const meetingData = {
             meetingId: '{{ meeting.zoom_meeting_id }}',
             password: '{{ meeting.zoom_password }}',
             signature: '{{ signature }}',
             userName: '{{ user_name }}',
-            userEmail: '{{ user_email }}',
+            userE-pochta: '{{ user_email }}',
             apiKey: '{{ api_key }}',
             meetingRoomUrl: '{% url "zoom:meeting_room" meeting.id %}',
             meetingListUrl: '{% url "zoom:meeting_list" %}',

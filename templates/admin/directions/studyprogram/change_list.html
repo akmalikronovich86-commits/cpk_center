@@ -3,9 +3,9 @@
 {% block result_list %}
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('📋 Добавляем столбец T/R...');
+        console.log('📋 Ustun qo'shilmoqda T/R...');
         
-        // Добавляем заголовок T/R
+        // T/R sarlavhasini qo'shish
         var thead = document.querySelector('#result_list thead tr');
         if (thead) {
             var th = document.createElement('th');
@@ -15,7 +15,7 @@
             thead.insertBefore(th, thead.firstChild);
         }
         
-        // Добавляем порядковые номера в строки
+        // Qatorlarga tartib raqamlarini qo'shish
         var tbody = document.querySelector('#result_list tbody');
         if (tbody) {
             var rows = tbody.querySelectorAll('tr');
