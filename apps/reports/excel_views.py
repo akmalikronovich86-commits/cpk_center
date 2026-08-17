@@ -4,6 +4,7 @@ Bir tugma bilan Excel hisobotlar - openpyxl
 from datetime import datetime
 
 from django.http import HttpResponse
+from django.shortcuts import render
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -13,7 +14,6 @@ from apps.certificates.models import Certificate
 from apps.groups.models import StudentRecord
 from apps.schedules.models import Schedule
 from apps.users.models import LecturerProfile
-from django.shortcuts import render
 
 STAFF_ROLES = ('admin', 'director', 'methodist', 'department_head')
 
@@ -53,14 +53,19 @@ def reports_index(request):
 
 @role_required(*STAFF_ROLES)
 def export_students(request):
-    headers = ['T/R', 'F.I.Sh.', 'Guruh', 'Telefon', 'Lavozimi',
+    headers = ['ID', 'F.I.Sh.', 'Guruh', 'Telefon', 'Lavozimi',
                'Hududiy filial', 'Yakuniy baho', 'Malaka muddati']
     rows = []
-    for i, s in enumerate(StudentRecord.objects.order_by('group', 'full_name'), 1):
+    for s in StudentRecord.objects.order_by('id'):
         rows.append((
-            i, s.full_name or '', s.group or '', s.phone or '',
-            getattr(s, 'position', '') or '', getattr(s, 'regional_branch', '') or '',
-            getattr(s, 'final_grade', '') or '', getattr(s, 'qualification_period', '') or '',
+            s.id,
+            s.full_name or '',
+            s.group or '',
+            s.phone or '',
+            getattr(s, 'position', '') or '',
+            getattr(s, 'regional_branch', '') or '',
+            getattr(s, 'final_grade', '') or '',
+            getattr(s, 'qualification_period', '') or '',
         ))
     return _xlsx_response(headers, rows, 'Tinglovchilar', f'tinglovchilar_{datetime.now():%Y%m%d}.xlsx')
 
@@ -80,16 +85,17 @@ def export_certificates(request):
 
 @role_required(*STAFF_ROLES)
 def export_schedule(request):
-    headers = ['Sana', 'Boshlanish', 'Tugash', 'Guruh', 'Modul', "Ma'ruzachi", 'Holat']
+    """Jadval eksporti - PRAVILNYE POLYA"""
+    headers = ['Boshlanish', 'Tugash', 'Guruh', 'Mavzu', "Ma'ruzachi", 'Xona', 'Holat']
     rows = []
-    for sch in Schedule.objects.order_by('date', 'start_time'):
+    for sch in Schedule.objects.order_by('date_start'):
         rows.append((
-            sch.date.strftime('%d.%m.%Y') if sch.date else '',
-            sch.start_time.strftime('%H:%M') if sch.start_time else '',
-            sch.end_time.strftime('%H:%M') if sch.end_time else '',
+            sch.date_start.strftime('%d.%m.%Y %H:%M') if sch.date_start else '',
+            sch.date_end.strftime('%d.%m.%Y %H:%M') if sch.date_end else '',
             str(getattr(sch, 'group', '') or ''),
-            getattr(getattr(sch, 'module', None), 'name', '') or '',
+            str(getattr(sch, 'topic', '') or ''),
             getattr(getattr(getattr(sch, 'lecturer', None), 'user', None), 'full_name', '') or '',
+            getattr(sch, 'room', '') or '',
             getattr(sch, 'status', '') or '',
         ))
     return _xlsx_response(headers, rows, 'Jadval', f'jadval_{datetime.now():%Y%m%d}.xlsx')
