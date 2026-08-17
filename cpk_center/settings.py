@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'apps.reports',
     'apps.students',
     'apps.assessments',
+    'apps.telegram_bot',
 ]
 
 MIDDLEWARE = [
@@ -255,3 +256,8 @@ STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
 }
+
+
+# Telegram Bot
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
+TELEGRAM_BOT_USERNAME = os.getenv('TELEGRAM_BOT_USERNAME', '')

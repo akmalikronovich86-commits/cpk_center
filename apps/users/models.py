@@ -14,6 +14,7 @@ class User(AbstractUser):
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student', verbose_name= "Rol")
     phone = models.CharField(max_length=20, blank=True, null=True, verbose_name= "Telefon raqami")
+    telegram_user_id = models.BigIntegerField(blank=True, null=True, unique=True, verbose_name="Telegram User ID")
     patronymic = models.CharField(max_length=100, blank=True, null=True, verbose_name= "Otasining ismi")
     position = models.CharField(max_length=100, blank=True, null=True, verbose_name= "Lavozimi")
     full_name = models.CharField(max_length=200, blank=True, null=True, verbose_name= "To'liq ismi")
