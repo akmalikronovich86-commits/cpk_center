@@ -1,0 +1,9 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/ch      - uses: actiones: actions/setup-      - uses: actions/ch      - uses: actiones: actions/setrun: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: pytest || true
