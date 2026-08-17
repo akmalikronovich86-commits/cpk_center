@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<title>Darsni boshlash</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background:#f2f5fa; margin:0; padding:30px; }
+  .card { max-width:500px; margin:30px auto; background:#fff; padding:30px;
+          border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,.1); text-align:center; }
+  h1 { color:#1f3c68; }
+  .info { color:#67748c; margin:15px 0; }
+  button { background:#28a745; color:#fff; padding:14px 32px; border:none;
+           border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; }
+  button:hover { background:#218838; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>📚 Darsni boshlash</h1>
+  <div class="info"><b>{{ schedule }}</b></div>
+  <div class="info">Haqiqatdan ham darsni boshlamoqchimisiz?</div>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">✅ Ha, darsni boshlash</button>
+  </form>
+</div>
+</body>
+</html>

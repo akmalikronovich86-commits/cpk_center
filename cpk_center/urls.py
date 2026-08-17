@@ -22,6 +22,7 @@ urlpatterns = [
     path('lecturers/', include('apps.lecturers.urls')),
     path('assessments/', include('apps.assessments.urls')),
     path('reports/', include('apps.reports.urls')),
+    path('attendance/', include('apps.attendance.urls')),
 
     # Короткие URL для личных кабинетов (перенаправления)
     path('methodist/dashboard/', RedirectView.as_view(url='/certificates/methodist/dashboard/', permanent=False), name='methodist_dashboard_short'),

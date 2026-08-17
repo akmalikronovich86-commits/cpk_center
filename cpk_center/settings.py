@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'apps.lecturers',
     'apps.exams',
     'apps.reports',
+    'apps.attendance',
     'apps.students',
     'apps.assessments',
     'apps.telegram_bot',
