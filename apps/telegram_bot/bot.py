@@ -12,9 +12,8 @@ from telegram.ext import (
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-from apps.certificates.models import Announcement
+from apps.certificates.models import Announcement, Certificate
 from apps.schedules.models import Schedule
-from apps.certificates.models import Certificate
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -25,7 +24,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     telegram_user_id = update.effective_user.id
     username = update.effective_user.username
     
-    # Foydalanuvchini qidiramiz
     try:
         user = User.objects.get(telegram_user_id=telegram_user_id)
         await update.message.reply_text(
@@ -106,7 +104,8 @@ async def show_announcements(query, user):
         text = "📢 <b>So'nggi e'lonlar:</b>\n\n"
         for ann in announcements:
             text += f"<b>{ann.title}</b>\n"
-            text += f"{ann.content[:200]}{'...' if len(ann.content) > 200 else ''}\n"
+            content = ann.content[:200] + ('...' if len(ann.content) > 200 else '')
+            text += f"{content}\n"
             text += f"📅 {ann.created_at.strftime('%d.%m.%Y %H:%M')}\n\n"
     
     keyboard = [[InlineKeyboardButton("◀️ Orqaga", callback_data='back_to_menu')]]
@@ -117,7 +116,6 @@ async def show_announcements(query, user):
 
 async def show_schedule(query, user):
     """Dars jadvalini ko'rsatish"""
-    # Agar talaba bo'lsa, o'z guruhining jadvalini ko'rsatamiz
     if user.role == 'student':
         from apps.groups.models import StudentRecord
         try:
@@ -131,10 +129,12 @@ async def show_schedule(query, user):
             else:
                 text = f"📅 <b>Sizning guruhingiz jadvali ({student_record.group}):</b>\n\n"
                 for schedule in schedules:
-                    text += f"📚 {schedule.module.name if schedule.module else 'Dars'}\n"
+                    module_name = schedule.module.name if schedule.module else 'Dars'
+                    lecturer_name = schedule.lecturer.user.full_name if schedule.lecturer else 'Noma-lum'
+                    text += f"📚 {module_name}\n"
                     text += f"📅 {schedule.date.strftime('%d.%m.%Y')}\n"
                     text += f"🕐 {schedule.start_time.strftime('%H:%M')} - {schedule.end_time.strftime('%H:%M')}\n"
-                    text += f"👨‍🏫 {schedule.lecturer.user.full_name if schedule.lecturer else 'Noma\\'lum'}\n\n"
+                    text += f"👨‍🏫 {lecturer_name}\n\n"
         except StudentRecord.DoesNotExist:
             text = "⚠️ Sizning guruhingiz topilmadi.\n\n"
     else:
@@ -231,12 +231,9 @@ def create_bot_application():
     
     application = Application.builder().token(settings.TELEGRAM_BOT_TOKEN).build()
     
-    # Buyruqlarni ro'yxatdan o'tkazish
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("menu", menu))
     application.add_handler(CommandHandler("help", help_command))
-    
-    # Tugmalarni bosishni boshqarish
     application.add_handler(CallbackQueryHandler(button_handler))
     
     return application

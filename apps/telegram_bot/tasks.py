@@ -27,8 +27,6 @@ def send_announcement_to_all(announcement_id):
         return
     
     bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
-    
-    # Barcha ro'yxatdan o'tgan foydalanuvchilarni olish
     users = User.objects.filter(telegram_user_id__isnull=False)
     
     message = (
@@ -77,13 +75,14 @@ def send_certificate_ready(certificate_id):
         return
     
     bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
+    course_name = certificate.course.name if certificate.course else 'Noma-lum'
     
     message = (
         f"🎉 <b>Tabriklaymiz!</b>\n\n"
         f"Sizning sertifikatingiz tayyor!\n\n"
         f"📜 Sertifikat raqami: <b>{certificate.certificate_number}</b>\n"
         f"📅 Berilgan sana: {certificate.issue_date.strftime('%d.%m.%Y')}\n"
-        f"📚 Kurs: {certificate.course.name if certificate.course else 'Noma\\'lum'}\n\n"
+        f"📚 Kurs: {course_name}\n\n"
         f"Sertifikatni yuklab olish uchun shaxsiy kabinetingizga kiring.\n"
         f"/menu - Asosiy menyu"
     )
@@ -105,7 +104,6 @@ def send_schedule_reminder(schedule_id):
     from apps.schedules.models import Schedule
     from apps.groups.models import StudentRecord
     from telegram import Bot
-    from datetime import datetime, timedelta
     
     try:
         schedule = Schedule.objects.get(id=schedule_id)
@@ -118,16 +116,17 @@ def send_schedule_reminder(schedule_id):
         return
     
     bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
-    
-    # Guruhdagi barcha talabalarni olish
     students = StudentRecord.objects.filter(group=schedule.group)
+    
+    module_name = schedule.module.name if schedule.module else 'Dars'
+    lecturer_name = schedule.lecturer.user.full_name if schedule.lecturer else 'Noma-lum'
     
     message = (
         f"⏰ <b>Dars eslatmasi!</b>\n\n"
-        f"📚 {schedule.module.name if schedule.module else 'Dars'}\n"
+        f"📚 {module_name}\n"
         f"📅 Bugun, {schedule.date.strftime('%d.%m.%Y')}\n"
         f"🕐 {schedule.start_time.strftime('%H:%M')} - {schedule.end_time.strftime('%H:%M')}\n"
-        f"👨‍🏫 {schedule.lecturer.user.full_name if schedule.lecturer else 'Noma\\'lum'}\n\n"
+        f"👨‍🏫 {lecturer_name}\n\n"
         f"Dars 1 soatdan keyin boshlanadi!"
     )
     
