@@ -67,6 +67,22 @@ services:
       PYTHONDONTWRITEBYTECODE: 1
       PYTHONUNBUFFERED: 1
 
+  bot:
+    build: .
+    container_name: cpk_bot
+    command: python manage.py run_telegram_bot
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      PYTHONDONTWRITEBYTECODE: 1
+      PYTHONUNBUFFERED: 1
+
 volumes:
   postgres_data:
   static_volume:
