@@ -1,17 +1,12 @@
 from django.urls import path
+from . import excel_views
 
-from .views import (
-    AttendanceReportView,
-    ExamResultsReportView,
-    LecturerLoadReportView,
-    ScheduleReportView,
-    StudentListReportView,
-)
+app_name = 'reports'
 
 urlpatterns = [
-    path('reports/lecturer-load/', LecturerLoadReportView.as_view()),
-    path('reports/attendance/', AttendanceReportView.as_view()),
-    path('reports/schedule/', ScheduleReportView.as_view()),
-    path('reports/students/', StudentListReportView.as_view()),
-    path('reports/exam-results/', ExamResultsReportView.as_view()),
+    path('', excel_views.reports_index, name='index'),
+    path('students/', excel_views.export_students, name='students_excel'),
+    path('certificates/', excel_views.export_certificates, name='certificates_excel'),
+    path('schedule/', excel_views.export_schedule, name='schedule_excel'),
+    path('lecturers/', excel_views.export_lecturers, name='lecturers_excel'),
 ]
