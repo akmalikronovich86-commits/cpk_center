@@ -226,3 +226,62 @@ class Attendance(models.Model):
 
     def __str__(self):
         return f"{self.student.get_full_name()} - {self.schedule} - {self.get_status_display()}"
+
+
+# ==== CONFLICT-VALIDATION (audit 2026-08-17) ====
+# Vaqt to'qnashuvlarini tekshirish: ma'ruzachi / guruh / xona
+_original_schedule_clean = getattr(Schedule, 'clean', None)
+
+
+def _schedule_clean_with_conflicts(self):
+    from django.core.exceptions import ValidationError
+
+    if _original_schedule_clean:
+        _original_schedule_clean(self)
+
+    date = getattr(self, 'date', None)
+    start = getattr(self, 'start_time', None)
+    end = getattr(self, 'end_time', None)
+    if not (date and start and end):
+        return
+
+    # Xona maydonini avtomatik aniqlash
+    room_field = None
+    for f in ('room', 'classroom', 'audience', 'xona'):
+        if hasattr(self, f):
+            room_field = f
+            break
+
+    qs = type(self).objects.filter(date=date).exclude(pk=self.pk)
+
+    errors = []
+    for other in qs:
+        o_start = getattr(other, 'start_time', None)
+        o_end = getattr(other, 'end_time', None)
+        if not (o_start and o_end):
+            continue
+        # Vaqt kesishishi: A_start < B_end AND B_start < A_end
+        if not (start < o_end and o_start < end):
+            continue
+
+        if getattr(self, 'lecturer_id', None) and self.lecturer_id == getattr(other, 'lecturer_id', None):
+            lecturer_name = getattr(getattr(self.lecturer, 'user', None), 'full_name', "ma'ruzachi")
+            errors.append(
+                f"⚠️ Ma'ruzachi band ({lecturer_name}): "
+                f"{other.date} {o_start.strftime('%H:%M')}-{o_end.strftime('%H:%M')} da dars bor"
+            )
+        if getattr(self, 'group_id', None) and self.group_id == getattr(other, 'group_id', None):
+            errors.append(
+                f"⚠️ Guruh band: {other.date} {o_start.strftime('%H:%M')}-{o_end.strftime('%H:%M')} da dars bor"
+            )
+        if room_field and getattr(self, room_field) and getattr(self, room_field) == getattr(other, room_field):
+            errors.append(
+                f"⚠️ Xona band ({getattr(self, room_field)}): "
+                f"{other.date} {o_start.strftime('%H:%M')}-{o_end.strftime('%H:%M')}"
+            )
+
+    if errors:
+        raise ValidationError(errors)
+
+
+Schedule.clean = _schedule_clean_with_conflicts
