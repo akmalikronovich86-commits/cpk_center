@@ -239,45 +239,43 @@ def _schedule_clean_with_conflicts(self):
     if _original_schedule_clean:
         _original_schedule_clean(self)
 
-    date = getattr(self, 'date', None)
-    start = getattr(self, 'start_time', None)
-    end = getattr(self, 'end_time', None)
-    if not (date and start and end):
+    date_start = getattr(self, 'date_start', None)
+    date_end = getattr(self, 'date_end', None)
+    if not (date_start and date_end):
         return
 
-    # Xona maydonini avtomatik aniqlash
-    room_field = None
-    for f in ('room', 'classroom', 'audience', 'xona'):
-        if hasattr(self, f):
-            room_field = f
-            break
-
-    qs = type(self).objects.filter(date=date).exclude(pk=self.pk)
+    qs = type(self).objects.all()
+    if self.pk:
+        qs = qs.exclude(pk=self.pk)
 
     errors = []
     for other in qs:
-        o_start = getattr(other, 'start_time', None)
-        o_end = getattr(other, 'end_time', None)
+        o_start = getattr(other, 'date_start', None)
+        o_end = getattr(other, 'date_end', None)
         if not (o_start and o_end):
             continue
         # Vaqt kesishishi: A_start < B_end AND B_start < A_end
-        if not (start < o_end and o_start < end):
+        if not (date_start < o_end and o_start < date_end):
             continue
 
+        # Ma'ruzachi band
         if getattr(self, 'lecturer_id', None) and self.lecturer_id == getattr(other, 'lecturer_id', None):
             lecturer_name = getattr(getattr(self.lecturer, 'user', None), 'full_name', "ma'ruzachi")
             errors.append(
                 f"⚠️ Ma'ruzachi band ({lecturer_name}): "
-                f"{other.date} {o_start.strftime('%H:%M')}-{o_end.strftime('%H:%M')} da dars bor"
+                f"{o_start.strftime('%d.%m.%Y %H:%M')}-{o_end.strftime('%H:%M')} da dars bor"
             )
+        # Guruh band
         if getattr(self, 'group_id', None) and self.group_id == getattr(other, 'group_id', None):
             errors.append(
-                f"⚠️ Guruh band: {other.date} {o_start.strftime('%H:%M')}-{o_end.strftime('%H:%M')} da dars bor"
+                f"⚠️ Guruh band: {o_start.strftime('%d.%m.%Y %H:%M')}-{o_end.strftime('%H:%M')} da dars bor"
             )
-        if room_field and getattr(self, room_field) and getattr(self, room_field) == getattr(other, room_field):
+        # Xona band
+        room = getattr(self, 'room', None)
+        o_room = getattr(other, 'room', None)
+        if room and o_room and room == o_room:
             errors.append(
-                f"⚠️ Xona band ({getattr(self, room_field)}): "
-                f"{other.date} {o_start.strftime('%H:%M')}-{o_end.strftime('%H:%M')}"
+                f"⚠️ Xona band ({room}): {o_start.strftime('%d.%m.%Y %H:%M')}-{o_end.strftime('%H:%M')}"
             )
 
     if errors:
